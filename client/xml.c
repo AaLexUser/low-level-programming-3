@@ -25,7 +25,8 @@ void add_node(xmlNodePtr parent, struct ast *node)
             xmlNode = xmlNewChild(parent, NULL, BAD_CAST "insert", NULL);
             snprintf(buffer, sizeof(buffer), "%s", insert_ast->tabname);
             xmlNewProp(xmlNode, BAD_CAST "tabname", BAD_CAST buffer);
-            add_node(xmlNode, insert_ast->list);
+            xmlNodePtr list = xmlNewChild(xmlNode, NULL, BAD_CAST "list", NULL);
+            add_node(list, insert_ast->list);
             break;
         }
         case NT_UPDATE: {
@@ -34,7 +35,8 @@ void add_node(xmlNodePtr parent, struct ast *node)
             snprintf(buffer, sizeof(buffer), "%s", update_ast->tabname);
             xmlNewProp(xmlNode, BAD_CAST "tabname", BAD_CAST buffer);
             add_node(xmlNode, update_ast->attr);
-            add_node(xmlNode, update_ast->list);
+            xmlNodePtr list = xmlNewChild(xmlNode, NULL, BAD_CAST "list", NULL);
+            add_node(list, update_ast->list);
             break;
         }
         case NT_REMOVE: {
@@ -50,7 +52,8 @@ void add_node(xmlNodePtr parent, struct ast *node)
             xmlNode = xmlNewChild(parent, NULL, BAD_CAST "create", NULL);
             snprintf(buffer, sizeof(buffer), "%s", create_ast->name);
             xmlNewProp(xmlNode, BAD_CAST "tabname", BAD_CAST buffer);
-            add_node(xmlNode, create_ast->difinitions);
+            xmlNodePtr list = xmlNewChild(xmlNode, NULL, BAD_CAST "list", NULL);
+            add_node(list, create_ast->difinitions);
             break;
         }
         case NT_DROP: {
@@ -138,7 +141,8 @@ void add_node(xmlNodePtr parent, struct ast *node)
             snprintf(buffer, sizeof(buffer), "%s", for_ast->tabname);
             xmlNewProp(xmlNode, BAD_CAST "tabname", BAD_CAST buffer);
             if(for_ast->nonterm_list_head != NULL){
-                add_node(xmlNode, for_ast->nonterm_list_head);
+                xmlNodePtr list = xmlNewChild(xmlNode, NULL, BAD_CAST "list", NULL);
+                add_node(list, for_ast->nonterm_list_head);
             }
             if(for_ast->terminal != NULL){
                 add_node(xmlNode, for_ast->terminal);

@@ -15,9 +15,7 @@ FOR u IN users
   FILTER u.score < 2
   REMOVE u IN users
 
-FOR u IN users
-  FILTER u.score < 2 AND u.name == "Alex"
-  UPDATE u WITH { score: 5 } IN users
+FOR u IN users FILTER u.score < 2 AND u.name == "Alex" UPDATE u WITH { score: 5 } IN users
 
 FOR u IN users
   FILTER u.score > 4 || u.name == "Alex"

@@ -1,7 +1,8 @@
 #include <network/network.h>
 #include <stdbool.h>
 #include <pthread.h>
-#include "backend/network/network.h"
+#include "backend/connection/xml.h"
+#include "backend/connection/network.h"
 #include "backend/db/db.h"
 
 #define DEFAULT_FILE "main.db"
@@ -21,6 +22,10 @@ void client_handler(const int* client)
             break;
         }
         printf("Received: %s\n", message);
+        struct ast* root = parse_xml_to_ast(message);
+        print_ast(stdout, root,0);
+        free_ast(root);
+        free(message);
     }
     close_socket(*client);
 }

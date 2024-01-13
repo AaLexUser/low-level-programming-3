@@ -34,12 +34,15 @@
 #         backend/network/network.c
 
 # )
+
+find_package(LibXml2 REQUIRED)
+
 file(GLOB_RECURSE sources CONFIGURE_DEPENDS *.c *.h)
 list(FILTER sources EXCLUDE REGEX main.c)
 
 add_library(db STATIC ${sources})
 target_include_directories(db PUBLIC .)
-target_link_libraries(db PUBLIC m)
+target_link_libraries(db PUBLIC m ${LIBXML2_LIBRARIES})
 if(CMAKE_BUILD_TYPE MATCHES Debug)
     target_compile_definitions(db PRIVATE LOGGER_LEVEL=0)
 else()
