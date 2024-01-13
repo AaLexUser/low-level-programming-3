@@ -1,0 +1,609 @@
+\documentclass[12pt,onecolumn]{article}
+\usepackage[utf8]{inputenc} % UTF8 input encoding
+\usepackage[T2A]{fontenc}   % T2A font encoding for Cyrillic script
+\usepackage[russian]{babel} % Russian language support
+\usepackage{listings}
+\usepackage{float}
+\usepackage{mathtools}
+\everymath{\displaystyle}
+\usepackage{listings} 
+\usepackage[usenames]{color}
+\usepackage{geometry}
+\usepackage{verbatim}
+\newcommand{\nparagraph}[1]{\paragraph{#1}\mbox{}\\}
+\geometry{
+  a4paper,
+  top=20mm, 
+  right=25mm, 
+  bottom=20mm, 
+  left=20mm
+}
+
+\lstdefinestyle{C}{language=C, 
+  basicstyle=\small\ttfamily,
+  commentstyle=\color{cyan},
+  stringstyle=\color{magenta}\ttfamily,
+  keywordstyle=\color{blue},
+  numbers=left,
+  numberstyle=\scriptsize,
+  numbersep=5pt,
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  tabsize=4,
+  inputencoding=utf8,
+  extendedchars=true,
+  literate={а}{{\selectfont\char224}}1
+          {б}{{\selectfont\char225}}1
+          {в}{{\selectfont\char226}}1
+          {г}{{\selectfont\char227}}1
+          {д}{{\selectfont\char228}}1
+          {е}{{\selectfont\char229}}1
+          {ё}{{\"e}}1
+          {ж}{{\selectfont\char230}}1
+          {з}{{\selectfont\char231}}1
+          {и}{{\selectfont\char232}}1
+          {й}{{\selectfont\char233}}1
+          {к}{{\selectfont\char234}}1
+          {л}{{\selectfont\char235}}1
+          {м}{{\selectfont\char236}}1
+          {н}{{\selectfont\char237}}1
+          {о}{{\selectfont\char238}}1
+          {п}{{\selectfont\char239}}1
+          {р}{{\selectfont\char240}}1
+          {с}{{\selectfont\char241}}1
+          {т}{{\selectfont\char242}}1
+          {у}{{\selectfont\char243}}1
+          {ф}{{\selectfont\char244}}1
+          {х}{{\selectfont\char245}}1
+          {ц}{{\selectfont\char246}}1
+          {ч}{{\selectfont\char247}}1
+          {ш}{{\selectfont\char248}}1
+          {щ}{{\selectfont\char249}}1
+          {ъ}{{\selectfont\char250}}1
+          {ы}{{\selectfont\char251}}1
+          {ь}{{\selectfont\char252}}1
+          {э}{{\selectfont\char253}}1
+          {ю}{{\selectfont\char254}}1
+          {я}{{\selectfont\char255}}1
+          {А}{{\selectfont\char192}}1
+          {Б}{{\selectfont\char193}}1
+          {В}{{\selectfont\char194}}1
+          {Г}{{\selectfont\char195}}1
+          {Д}{{\selectfont\char196}}1
+          {Е}{{\selectfont\char197}}1
+          {Ё}{{\"E}}1
+          {Ж}{{\selectfont\char198}}1
+          {З}{{\selectfont\char199}}1
+          {И}{{\selectfont\char200}}1
+          {Й}{{\selectfont\char201}}1
+          {К}{{\selectfont\char202}}1
+          {Л}{{\selectfont\char203}}1
+          {М}{{\selectfont\char204}}1
+          {Н}{{\selectfont\char205}}1
+          {О}{{\selectfont\char206}}1
+          {П}{{\selectfont\char207}}1
+          {Р}{{\selectfont\char208}}1
+          {С}{{\selectfont\char209}}1
+          {Т}{{\selectfont\char210}}1
+          {У}{{\selectfont\char211}}1
+          {Ф}{{\selectfont\char212}}1
+          {Х}{{\selectfont\char213}}1
+          {Ц}{{\selectfont\char214}}1
+          {Ч}{{\selectfont\char215}}1
+          {Ш}{{\selectfont\char216}}1
+          {Щ}{{\selectfont\char217}}1
+          {Ъ}{{\selectfont\char218}}1
+          {Ы}{{\selectfont\char219}}1
+          {Ь}{{\selectfont\char220}}1
+          {Э}{{\selectfont\char221}}1
+          {Ю}{{\selectfont\char222}}1
+          {Я}{{\selectfont\char223}}1
+}
+
+\begin{document}
+\setcounter{tocdepth}{4}
+\begin{center}
+    Федеральное государственное автономное образовательное учреждение высшего образования "Национальный Исследовательский Университет ИТМО"\\ 
+    Мегафакультет Компьютерных Технологий и Управления\\
+    Факультет Программной Инженерии и Компьютерной Техники \\
+    \includegraphics[scale=0.3]{image/itmo.jpg} % нужно закинуть картинку логтипа в папку с отчетом
+\end{center}
+\vspace{1cm}
+
+
+\begin{center}
+    \textbf{Лабораторная №1}\\
+    по дисциплине\\
+    \textbf{'Низкоуровневое программирование'}
+\end{center}
+
+\vspace{2cm}
+
+\begin{flushright}
+  Выполнил Студент  группы P33102\\
+  \textbf{Лапин Алексей Александрович}\\
+  Преподаватель: \\
+  \textbf{Кореньков Юрий Дмитриевич}\\
+\end{flushright}
+
+\vspace{6cm}
+\begin{center}
+    г. Санкт-Петербург\\
+    2023г.
+\end{center}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Цель:}
+Выданный вариант - 5 (реляционные таблицы, отображение файла)
+Целью является создать модуль, реализующий хранение в одном файле данных информации общим объёмом от 10GB в виде реляционных таблиц.
+\section{Задачи:}
+\begin{enumerate}
+  \item Модуль работающий с файлом на низком уровне(маппинг, синхронизация, чтение, запись и п.т) с одной страницей(file);
+  \item Модуль, который абстрагируется от низкоуровневых операций и предоставляет более удобный интерфейс для записи и чтения, а также осуществление кеширования страниц(caching);
+  \item Модуль, который еще больше абстрагируется от низкоуровневых операций и добавляет возможность переиспользовать страницы, после их удаления(pager);
+  \item Модуль, который соединяет страницы в список, для работы не с физическими страницами по 4кб, а с виртуальными условно бесконечными страницами. (linked-pages)
+  \item Модуль, который строит поверх linked-pages pool страниц, блоки которого можно выдавать за O(1). (page-pool)
+  \item Модуль, который расширяет блоки в page-pool, связывая их, чтобы можно было работать не с физическими блоками фиксированного размера, а с виртуальными условно бесконечными блоками. (linked-blocks)
+  \item Модули, создания схемы таблицы и самих таблиц
+  \item Модули, хранения метаинформации о существующих таблицах, строках переменной длинны и т.п.
+  \item Операции над таблицами, вставка, удаление, обновление, выборка, соединение, сравнение rows и т.п.
+\end{enumerate}
+\subsection{Описание структур данных для представления данных в памяти:}
+
+
+\begin{lstlisting}[style=C]
+  /* Файл */
+typedef struct file {
+  char *filename;
+  int fd;
+  void *cur_mmaped_data;
+  off_t cur_page_offset;
+  off_t file_size;
+  int64_t max_page_index;
+} file_t;
+
+/* Кеширование */
+typedef struct caching{
+    file_t file;
+    size_t size, used, max_used, capacity;
+    uint32_t* usage_count;
+    time_t* last_used;
+    void** cached_page_ptr;
+    char* flags;
+} caching_t;
+
+/* Переиспользование страниц */
+typedef struct pager{
+    caching_t ch;
+    int64_t deleted_pages; // index of parray page with deleted pages
+} pager_t;
+
+/* Связанные страницы */
+typedef struct linked_page{
+    int64_t next_page;
+    int64_t page_index;
+    int64_t mem_start;
+} linked_page_t;
+
+/* Пул страниц */
+
+/* Чанк */
+typedef struct chunk {
+    linked_page_t lp_header;
+    int64_t page_index;
+    int64_t capacity;
+    int64_t num_of_free_blocks;
+    int64_t num_of_used_blocks;
+    int64_t next;
+    int64_t prev_page;
+    int64_t next_page;
+} chunk_t;
+
+/* Менеджер пула */
+typedef struct page_pool {
+    linked_page_t lp_header;
+    int64_t current_idx;
+    int64_t head;
+    int64_t tail;
+    int64_t block_size;
+    int64_t wait; // parray index
+} page_pool_t;
+
+/* Связанные блоки */
+typedef struct linked_block{
+    chblix_t next_block;
+    chblix_t prev_block;
+    chblix_t chblix;
+    char flag;
+    int64_t mem_start;
+} linked_block_t;
+
+  /* Поле схемы */
+typedef struct field{
+  linked_block_t lb_header;
+  char name[MAX_NAME_LENGTH];
+  datatype_t type;
+  uint64_t size;
+  uint64_t offset;
+} field_t;
+
+/* Схема таблицы */
+typedef struct schema{
+  page_pool_t ppl_header;
+  int64_t slot_size;
+} schema_t;
+
+/* Таблица */ 
+typedef struct table {
+    page_pool_t ppl_header;
+    int64_t schidx; //schema index
+    char name[MAX_NAME_LENGTH];
+} table_t;
+
+/* Типы данных */
+typedef enum datatype {DT_UNKNOWN = -1,
+                       DT_INT = 0,
+                       DT_FLOAT = 1,
+                       DT_VARCHAR = 2,
+                       DT_CHAR = 3,
+                       DT_BOOL = 4} datatype_t;
+\end{lstlisting}
+
+
+\section{Описание работы:}
+\subsection{Публичный интерфейс:}
+\subsubsection{Таблица}
+\begin{lstlisting}[style=C]
+
+/**
+* @brief       Initialize table and add it to the metatable
+* @param[in]   db: pointer to db
+* @param[in]   name: name of the table
+* @param[in]   schema: pointer to schema
+* @return      index of the table on success, TABLE_FAIL on failure
+*/
+table_t* tab_init(db_t* db, const char* name, schema_t* schema);
+/**
+ * @brief       Get row by value in column
+ * @param[in]   db: pointer to db
+ * @param[in]   table: pointer to the table
+ * @param[in]   schema: pointer to the schema
+ * @param[in]   field: pointer to the field
+ * @param[in]   value: pointer to the value
+ * @param[in]   type: type of the value
+ * @return      chblix_t of row on success, CHBLIX_FAIL on failure
+ */
+chblix_t tab_get_row(db_t* db,
+                    table_t* table,
+                    schema_t* schema, 
+                    field_t* field, 
+                    void* value, 
+                    datatype_t type);
+/**
+* @brief       Print table
+* @param[in]   db: pointer to db
+* @param[in]   table: index of the table
+* @param[in]   schema: pointer to the schema
+*/
+void tab_print(db_t* db, 
+            table_t* table,
+            schema_t* schema);
+/**
+* @brief       Inner join two tables
+* @param[in]   db: pointer to db
+* @param[in]   left: pointer to the left table
+* @param[in]   left_schema: pointer to the schema of the left table
+* @param[in]   right: pointer to the right table
+* @param[in]   right_schema: pointer to the schema of the right table
+* @param[in]   join_field_left: join field of the left table
+* @param[in]   join_field_right: join field of the right table
+* @param[in]   name: name of the new table
+* @return      pointer to the new table on success, NULL on failure
+*/                                  
+int64_t tab_join(
+        db_t* db,
+        int64_t leftidx,
+        int64_t rightidx,
+        const char* join_field_left,
+        const char* join_field_right,
+        const char* name);
+/**
+* @brief       Select row form table on condition
+* @param[in]   db: pointer to db
+* @param[in]   sel_table: pointer to table from which the selection is made
+* @param[in]   sel_schema: pointer to schema of the table from which the selection is made
+* @param[in]   select_field: the field by which the selection is performed
+* @param[in]   name: name of new table that will be created
+* @param[in]   condition: comparison condition
+* @param[in]   value: value to compare with
+* @param[in]   type: the type of value to compare with
+* @return      pointer to new table on success, NULL on failure
+*/
+table_t* tab_select_op(db_t* db,
+        table_t* sel_table,
+        schema_t* sel_schema,
+        field_t* select_field,
+        const char* name,
+        condition_t condition,
+        void* value,
+        datatype_t type);
+/**
+* @brief       Drop a table
+* @param[in]   db: pointer to db
+* @param[in]   table: pointer of the table
+* @return      PPL_SUCCESS on success, PPL_FAIL on failure
+*/
+int tab_drop(db_t* db, table_t* table);
+
+/**
+ * @brief       Update row in table
+ * @param[in]   db: pointer to db
+ * @param[in]   table: pointer to table 
+ * @param[in]   schema: pointer to schema 
+ * @param[in]   field: pointer to field 
+ * @param[in]   condition: comparison condition
+ * @param[in]   value: value to compare with
+ * @param[in]   type: the type of value to compare with 
+ * @param[in]   row: pointer to new row which will replace the old one
+ * @return 
+ */
+int tab_update_row_op(db_t* db,
+                           table_t* table,
+                           schema_t* schema,
+                           field_t* field,
+                           condition_t condition,
+                           void* value,
+                           datatype_t type,
+                           void* row);
+
+/**
+ * @brief       Update element in table
+ * @param[in]   db: pointer to db
+ * @param[in]   tablix: index of the table
+ * @param[in]   element: element to write
+ * @param[in]   field_name: name of the element field
+ * @param[in]   field_comp: name of the field compare with
+ * @param[in]   condition: comparison condition
+ * @param[in]   value: value to compare with
+ * @param[in]   type: the type of value to compare with
+ * @return      TABLE_SUCCESS on success, TABLE_FAIL on failure
+ */
+
+int tab_update_element_op(db_t* db,
+                            int64_t tablix,
+                            void* element,
+                            const char* field_name,
+                            const char* field_comp,
+                            condition_t condition,
+                            void* value,
+                            datatype_t type);
+/**
+* @brief       Delete row from table
+* @param[in]   db: pointer to db
+* @param[in]   table: pointer to table
+* @param[in]   schema: pointer to schema
+* @param[in]   field_comp: pointer to field to compare
+* @param[in]   condition: comparison condition
+* @param[in]   value: value to compare with
+* @return      TABLE_SUCCESS on success, TABLE_FAIL on failure
+*/                          
+int tab_delete_op(db_t* db,
+                   table_t* table,
+                   schema_t* schema,
+                   field_t* comp,
+                   condition_t condition,
+                   void* value);
+/**
+* @brief       Insert a row
+* @param[in]   table: pointer to table
+* @param[in]   schema: pointer to schema
+* @param[in]   src: source
+* @return      chblix_t of row on success, CHBLIX_FAIL on failure
+*/
+
+chblix_t tab_insert(table_t* table, schema_t* schema, void* src)
+
+/** @brief       Create a table on a subset of fields
+*  @param[in]   db: pointer to db
+*  @param[in]   table: pointer to table
+*  @param[in]   schema: pointer to schema
+*  @param[in]   fields: pointer to fields
+*  @param[in]   num_of_fields: number of fields
+*  @param[in]   name: name of the new table
+*  @return      pointer to new table on success, NULL on failure
+*/
+
+table_t* tab_projection(db_t* db,
+                        table_t* table,
+                        schema_t* schema,
+                        field_t* fields,
+                        int64_t num_of_fields,
+                        const char* name);
+
+/**
+* @brief       For each element specific column in a table
+* @param[in]   table: pointer to the table
+* @param[in]   chunk: chunk
+* @param[in]   chblix: chblix of the row
+* @param[in]   element: pointer to the element, must be allocated before calling this macro
+* @param[in]   field: pointer to field of the element
+*/
+
+#define tab_for_each_element(table, chunk, chblix, element, field)
+/**
+ * @brief       For each element specific column in a table
+ * @param[in]   table: pointer to the table
+ * @param[in]   chunk: chunk
+ * @param[in]   chblix: chblix of the row
+ * @param[in]   row: pointer to the row, must be allocated before calling this macro
+ * @param[in]   schema: pointer to the schema
+ */
+
+#define tab_for_each_row(table, chunk, chblix, row, schema)
+\end{lstlisting}
+\subsubsection{Схема}
+\begin{lstlisting}[style=C]
+  /**
+  * @brief       Delete a schema
+  * @param[in]   schidx: index of the schema
+  * @return      SCHEMA_SUCCESS on success, SCHEMA_FAIL on failure
+  */
+ 
+ #define sch_delete(schidx)
+
+ /**
+ * @brief      Load field
+ * @param[in]  schidx: index of the schema
+ * @param[in]  fieldix: index of the field
+ * @param[out] field: pointer to the field
+ * @return     LB_SUCCESS on success, LB_FAIL on failure
+ */
+
+#define sch_field_load(schidx, fieldix, field)
+
+/**
+ * @brief      Update field
+ * @param[in]  schidx: index of the schema
+ * @param[in]  fieldix: index of the field
+ * @param[out] field: pointer to the field
+ * @return     LB_SUCCESS on success, LB_FAIL on failure
+ */
+
+#define sch_field_update(schidx, fieldix, field)
+
+#define sch_add_int_field(schema, name) sch_add_field((schema), name, DT_INT, sizeof(int64_t))
+#define sch_add_char_field(schema, name, size) sch_add_field((schema), name, DT_CHAR, size)
+#define sch_add_varchar_field(schema, name) sch_add_field((schema), name, DT_VARCHAR, sizeof(vch_ticket_t))
+#define sch_add_float_field(schema, name) sch_add_field((schema), name, DT_FLOAT, sizeof(float))
+#define sch_add_bool_field(schema, name) sch_add_field((schema), name, DT_BOOL, sizeof(bool))
+
+/**
+ * @brief       For each field in a schema
+ * @param[in]   sch: pointer to the schema
+ * @param[in]   chunk: chunk
+ * @param[in]   field: pointer to the field
+ * @param[in]   chblix: chblix of the row
+ * @param[in]   schidx: index of the schema
+ */
+
+#define sch_for_each(sch,chunk, field, chblix, schidx)
+/**
+ * @brief       Initialize a schema
+ * @return      pointer to schema on success, NULL on failure
+ */
+void* sch_init(void);
+/**
+ * @brief       Add a field
+ * @param[in]   schema: pointer to schema
+ * @param[in]   name: name of the field
+ * @param[in]   type: type of the field
+ * @param[in]   size: size of the type
+ * @return      SCHEMA_SUCCESS on success, SCHEMA_FAIL on failure
+ */
+int sch_add_field(schema_t* schema, const char* name, datatype_t type, int64_t size);
+/**
+ * @brief       Get a field
+ * @param[in]   schema: pointer to the schema
+ * @param[in]   name: name of the field
+ * @param[out]  field: pointer to destination field
+ * @return      SCHEMA_SUCCESS on success, SCHEMA_FAIL on failure
+ */
+int sch_get_field(schema_t* schema, const char* name, field_t* field);
+/**
+ * @brief       Delete a field
+ * @warning     This function delete field, but dont touch offsets in other fields in schema.
+ * @param[in]   schema: pointer to schema
+ * @param[in]   name: name of the field
+ * @return      SCHEMA_SUCCESS on success, SCHEMA_FAIL on failure
+ */
+int sch_delete_field(schema_t* schema, const char* name);
+\end{lstlisting}
+\subsubsection{База данных}
+\begin{lstlisting}[style=C]
+/**
+ * @brief       Initialize database
+ * @param[in]   filename: name of the file
+ * @return      pointer to database on success, NULL on failure
+ */
+ void* db_init(const char* filename);
+ /**
+ * @brief       Close database
+ * @return      DB_SUCCESS on success, DB_FAIL on failure
+ */
+int db_close(void);
+/**
+ * @brief       Drop database
+ * @return      DB_SUCCESS on success, DB_FAIL on failure
+ */
+int db_drop(void);
+\end{lstlisting}
+\subsection{Модули:}
+Директория core - содержит модули, строящие абстракции над работой с файлом, вводом-выводом и т.п. 
+\begin{enumerate}
+  \item file - осуществляет базовую работу с файлом, при использовании одной страницы.
+  \item caching - кеширует страницы, освобождает их по мере заполнения оперативной памяти.
+  \item pager - хранит очередь страниц, готовых для переиспользования.
+  \item liked\_pages - реализация связанных страниц.
+  \item page\_pool - реализация пула страниц.
+  \item linked\_blocks - реализация связанных блоков.
+\end{enumerate}
+Директория backend - содержит модули, реализовывающие работу с реляционной базой данных.
+\begin{enumerate}
+  \item schema - реализация операций с схемой таблиц
+  \item table\_base - базовые операции с таблицами (нужны для других модулей)
+  \item matatab - таблица с метаданными (название и индекс страницы) других таблиц.
+  \item varchar\_mgr - пул хранящий строки произвольной длинны и выдающий номерки для их поиска в нем.
+  \item db - модуль выполняющий операции на старте (инициализация файла, метатаблицы, varchar\_mgr), и в завершении работы программы (закрытие файла, удаление файла). Также хранит индекс метатаблицы и тп.
+  \item data-types - поддерживаемые типы данных.
+  \item comparator - сравнение поддерживаемых типов.
+\end{enumerate}
+\section{Аспекты реализации:}
+\begin{enumerate}
+  \item Данные хранятся в страницах стандартного размера для операционной системы (обычно 4 кб). 
+  \item Странницы кешируются и освобождаются по необходимости. Для этого создана map ключем в которой является номер страницы, а значением указатель на область памяти, статус-флаги, последние время использования, количество использования. Освобождение страницы из конца файла удаляет страницу. Освобождение страницы из середины файла ставит её в очередь не переиспользование при следующем запросе на аллокацию.
+  \item Чтобы поддерживать возможность добавление единиц данных больше размера страницы, страницы могут расширяться путем связывания linkedlist с новыми страницами. Для обращения и удаления этих страниц используется номер первой входящей в список страницы.
+  \item Чтобы выдавать элементы(строки) за O(1) на страницах построен pool. Pool состоит из chunks размером в одну связную страницу, chunks связаны между собой двусвязным linkedlist. При отдаче всех блоков из chunk мы переставляем указатель на следующий. Когда в chunk освобождается блок, то он ставится в очередь на использование, когда в текущем chunk закончится место. Если в chunk освобождены все строки, то страница полностью удаляется.
+  \item Чтобы поддерживать возможность записывать в блоки данные произвольной длинны, блоки могут расшириться связываясь с помощью linkedlist.
+  \item Схема таблицы построена поверх пула страниц, а поля являются блоками этого пула.
+  \item Таблицы строятся поверх своих пулов страниц, строки являются блоками пула.
+\end{enumerate}
+\section{Результаты:}
+\subsection{Операция вставки:}
+\includegraphics[width=\textwidth]{image/insert.png}
+\subsection{Операция выборки:}
+\includegraphics[width=\textwidth]{image/select.png}
+\subsection{Операция удаления:}
+\includegraphics[width=\textwidth]{image/delete.png}
+\subsection{Операция обновления:}
+\includegraphics[width=\textwidth]{image/update.png}
+\subsection{Размер файла:}
+\includegraphics[width=\textwidth]{image/mem.png}
+\subsection{Использование оперативной памяти:}
+\includegraphics[width=\textwidth]{image/ram.png}
+\section{Выводы:}
+Как видно из графика вставка работает за O(1), скочки на графике связаны скорее всего с аллокацией дополнительных страниц, как для хранения строк, так и для хранения очередей. 
+
+Выборка работает за O(n), так как мы проходим по всем строкам. Есть одна точка, которая сильно отличается от остальных, считаю её выбросом.
+
+Удаление работает за O(n), так как мы проходим по всем строкам.
+
+Обновление работает за O(n), так как мы проходим по всем строкам.
+
+Размер файла растет линейно, так как мы добавляем новые страницы.
+
+Использование оперативной памяти O(1), так как мы загружаем страницы, когда нам они нужны и освобождаем, когда уже нет.
+
+\textbf{Что я узнал, чему научился:}
+\begin{enumerate}
+  \item Написал свою первую большую программу на C, больше прогрузился в язык, в работу с ним.
+  \item Погрузился в то как работают базы данных изнури, написал свою.
+  \item Узнал новые алгоритмы и структуры данных, научился сам их реализовывать.
+  \item Научился работать с файлами, работать с памятью, работать с потоками ввода-вывода.
+  \item Научился писать переносимые приложения под разные операционные системы: Linux, Windows, MacOS.
+\end{enumerate}
+\end{document}
