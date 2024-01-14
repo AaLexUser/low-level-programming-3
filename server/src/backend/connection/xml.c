@@ -221,3 +221,74 @@ struct ast *parse_xml_to_ast(const char *xml_content)
     xmlCleanupParser();
     return ast_root;
 }
+
+char* response2xml(db_t* db, struct response* resp) {
+    xmlDocPtr doc = xmlNewDoc(BAD_CAST "1.0");
+    xmlNodePtr root_node = xmlNewNode(NULL, BAD_CAST "response");
+    xmlDocSetRootElement(doc, root_node);
+    xmlNewProp(root_node, BAD_CAST "status", BAD_CAST (resp->status == 0 ? "OK" : "ERROR"));
+    if(resp->message != NULL){
+        xmlNodePtr message_node = xmlNewChild(root_node, NULL, BAD_CAST "message", BAD_CAST resp->message);
+    }
+    if(resp->table != NULL){
+        xmlNodePtr table_node = xmlNewChild(root_node, NULL, BAD_CAST "table", NULL);
+        xmlNewProp(table_node, BAD_CAST "name", BAD_CAST resp->table->name);
+        table_t* table = resp->table;
+        schema_t* schema = sch_load(table->schidx);
+        xmlNodePtr schema_node = xmlNewChild(table_node, NULL, BAD_CAST "schema", NULL);
+        sch_for_each(schema, chunk3, field3, chblix3, schema_index(schema)) {
+            xmlNodePtr field_node = xmlNewChild(schema_node, NULL, BAD_CAST "field", NULL);
+            xmlNewProp(field_node, BAD_CAST "name", BAD_CAST field3.name);
+        }
+        void* row = malloc(schema->slot_size);
+        xmlNodePtr rows_node = xmlNewChild(table_node, NULL, BAD_CAST "rows", NULL);
+        tab_for_each_row(table, chunk, chblix, row, schema){
+            xmlNodePtr row_node = xmlNewChild(rows_node, NULL, BAD_CAST "row", NULL);
+            sch_for_each(schema, chunk2, field, chblix2, schema_index(schema)){
+                switch (field.type) {
+                    case DT_INT: {
+                        int64_t val = *(int64_t*)((char*)row + field.offset);
+                        char *value_str = malloc(21);
+                        sprintf(value_str, "%"PRId64, val);
+                        xmlNodePtr element_node = xmlNewChild(row_node, NULL, BAD_CAST "element", BAD_CAST value_str);
+                        xmlNewProp(element_node, BAD_CAST "name", BAD_CAST field.name);
+                        free(value_str);
+                        break;
+                    }
+                    case DT_FLOAT: {
+                        double val = *(double*)((char*)row + field.offset);
+                        char *value_str = malloc(21);
+                        sprintf(value_str, "%f", val);
+                        xmlNodePtr element_node = xmlNewChild(row_node, NULL, BAD_CAST "element", BAD_CAST value_str);
+                        xmlNewProp(element_node, BAD_CAST "name", BAD_CAST field.name);
+                        free(value_str);
+                        break;
+                    }
+                    case DT_VARCHAR: {
+                        vch_ticket_t* vch = (vch_ticket_t*)((char*)row + field.offset);
+                        char* str = malloc(vch->size);
+                        vch_get(db->varchar_mgr_idx, vch, str);
+                        xmlNodePtr element_node = xmlNewChild(row_node, NULL, BAD_CAST "element", BAD_CAST str);
+                        xmlNewProp(element_node, BAD_CAST "name", BAD_CAST field.name);
+                        free(str);
+                        break;
+                    }
+                    case DT_BOOL:{
+                        bool val = *(bool*)((char*)row + field.offset);
+                        char *value_str = malloc(6);
+                        sprintf(value_str, "%s", val ? "true" : "false");
+                        xmlNodePtr element_node = xmlNewChild(row_node, NULL, BAD_CAST "element", BAD_CAST value_str);
+                        xmlNewProp(element_node, BAD_CAST "name", BAD_CAST field.name);
+                        free(value_str);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    xmlChar *xmlbuff;
+    int buffersize;
+    xmlDocDumpFormatMemory(doc, &xmlbuff, &buffersize, 1);
+    xmlFreeDoc(doc);
+    return (char*)xmlbuff;
+}

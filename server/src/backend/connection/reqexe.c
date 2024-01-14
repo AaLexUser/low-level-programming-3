@@ -1,3 +1,4 @@
+#include <stdarg.h>
 #include "reqexe.h"
 #include "backend/db/db.h"
 #include "backend/table/table.h"
@@ -11,6 +12,18 @@ struct constant_val {
         char *string_val;
     };
 };
+
+char* strdupf(const char* format, ...) {
+    va_list args;
+    va_start(args, format);
+    int length = vsnprintf(NULL, 0, format, args);
+    va_end(args);
+    char* str = malloc(length + 1);
+    va_start(args, format);
+    vsprintf(str, format, args);
+    va_end(args);
+    return str;
+}
 
 void reverseList(struct list_ast **head_ref) {
     struct list_ast *prev = NULL;
@@ -200,24 +213,24 @@ table_t *simple_condition(db_t *db, struct filter_condition_ast *root, table_t *
     return result_table;
 }
 
-table_t *complex_condition(db_t *db, struct filter_condition_ast *root, table_t *table, schema_t *schema) {
-    struct filter_condition_ast *condition_ast_ptr = (struct filter_condition_ast *) root;
-    table_t *result_table = NULL;
-    if (condition_ast_ptr->r != NULL && condition_ast_ptr->logic != -1) {
-        table_t *right_table = complex_condition(db, condition_ast_ptr, table, schema);
-        table_t *left_table = complex_condition(db, condition_ast_ptr, table, schema);
-        if (left_table == NULL || right_table == NULL) {
-            logger(LL_ERROR, __func__, "Failed to filter");
-            return NULL;
-        }
-        result_table = tab_join(db, left_table, right_table, schema, condition_ast_ptr->logic);
-        tab_drop(db, left_table);
-        tab_drop(db, right_table);
-    } else {
-        result_table = simple_condition(db, condition_ast_ptr, table, schema);
-    }
-
-}
+//table_t *complex_condition(db_t *db, struct filter_condition_ast *root, table_t *table, schema_t *schema) {
+//    struct filter_condition_ast *condition_ast_ptr = (struct filter_condition_ast *) root;
+//    table_t *result_table = NULL;
+//    if (condition_ast_ptr->r != NULL && condition_ast_ptr->logic != -1) {
+//        table_t *right_table = complex_condition(db, condition_ast_ptr, table, schema);
+//        table_t *left_table = complex_condition(db, condition_ast_ptr, table, schema);
+//        if (left_table == NULL || right_table == NULL) {
+//            logger(LL_ERROR, __func__, "Failed to filter");
+//            return NULL;
+//        }
+//        result_table = tab_join_on_field(db, left_table, right_table, schema, condition_ast_ptr->logic);
+//        tab_drop(db, left_table);
+//        tab_drop(db, right_table);
+//    } else {
+//        result_table = simple_condition(db, condition_ast_ptr, table, schema);
+//    }
+//
+//}
 
 
 table_t *filter(db_t *db, struct ast *root, table_t *table, schema_t *schema) {
@@ -232,18 +245,17 @@ table_t *filter(db_t *db, struct ast *root, table_t *table, schema_t *schema) {
     return result_table;
 }
 
-
-int for_op(db_t *db, struct ast *root) {
+table_t *for_stmt(db_t *db, struct ast *root) {
     struct for_ast *for_ast_ptr = (struct for_ast *) root;
     int64_t tabix = mtab_find_table_by_name(db->meta_table_idx, for_ast_ptr->tabname);
     if (tabix == TABLE_FAIL) {
         logger(LL_ERROR, __func__, "Failed to find table %s", for_ast_ptr->tabname);
-        return -1;
+        return NULL;
     }
     table_t *table = tab_load(tabix);
     if (table == NULL) {
         logger(LL_ERROR, __func__, "Failed to load table %s", for_ast_ptr->tabname);
-        return -1;
+        return NULL;
     }
     schema_t *schema = sch_load(table->schidx);
     struct list_ast *temp = (struct list_ast *) for_ast_ptr->nonterm_list_head;
@@ -256,7 +268,7 @@ int for_op(db_t *db, struct ast *root) {
                 result_table = filter(db, list_ast->value, table, schema);
                 if (result_table == NULL) {
                     logger(LL_ERROR, __func__, "Failed to filter");
-                    return -1;
+                    return NULL;
                 }
                 tab_print(db, result_table, schema);
                 tab_drop(db, result_table);
@@ -264,24 +276,141 @@ int for_op(db_t *db, struct ast *root) {
             }
             default: {
                 logger(LL_ERROR, __func__, "Invalid type %d", list_ast->value->nodetype);
+                return NULL;
+            }
+        }
+        temp = (struct list_ast *) list_ast->next;
+    }
+    return result_table;
+}
+
+
+int for_op(db_t *db, struct ast *root, struct response *resp) {
+    struct for_ast *for_ast_ptr = (struct for_ast *) root;
+    int64_t tabix = mtab_find_table_by_name(db->meta_table_idx, for_ast_ptr->tabname);
+    if (tabix == TABLE_FAIL) {
+        logger(LL_ERROR, __func__, "Failed to find table %s", for_ast_ptr->tabname);
+        resp->status = -1;
+        resp->message = strdupf("Failed to find table %s", for_ast_ptr->tabname);
+        return -1;
+    }
+    table_t *table = tab_load(tabix);
+    if (table == NULL) {
+        logger(LL_ERROR, __func__, "Failed to load table %s", for_ast_ptr->tabname);
+        resp->status = -1;
+        resp->message = strdupf("Failed to load table %s", for_ast_ptr->tabname);
+        return -1;
+    }
+    schema_t *schema = sch_load(table->schidx);
+    struct list_ast *temp = (struct list_ast *) for_ast_ptr->nonterm_list_head;
+    reverseList(&temp);
+    table_t *filtered_table = NULL;
+    table_t *second_table = NULL;
+    while (temp != NULL) {
+        struct list_ast *list_ast = (struct list_ast *) temp;
+        switch (list_ast->value->nodetype) {
+            case NT_FILTER: {
+                table_t *temp_filter_tab = NULL;
+                bool droptab = false;
+                if (filtered_table != NULL) {
+                    temp_filter_tab = filtered_table;
+                    droptab = true;
+                } else {
+                    temp_filter_tab = table;
+                }
+                filtered_table = filter(db, list_ast->value, temp_filter_tab, schema);
+                if (filtered_table == NULL) {
+                    logger(LL_ERROR, __func__, "Failed to filter");
+                    resp->status = -1;
+                    resp->message = strdupf("Failed to filter");
+                    return -1;
+                }
+                if (droptab) {
+                    tab_drop(db, temp_filter_tab);
+                }
+                printf("Filtered table:\n");
+                tab_print(db, filtered_table, schema);
+                printf("...............\n");
+                break;
+            }
+            case NT_FOR: {
+                second_table = for_stmt(db, list_ast->value);
+                break;
+            }
+            default: {
+                logger(LL_ERROR, __func__, "Invalid type %d", list_ast->value->nodetype);
+                resp->status = -1;
+                resp->message = strdupf("Invalid type %d", list_ast->value->nodetype);
                 return -1;
             }
         }
         temp = (struct list_ast *) list_ast->next;
     }
-    return 0;
+
+    if (filtered_table == NULL) {
+        filtered_table = table;
+    }
+    struct ast *terminal = for_ast_ptr->terminal;
+    switch (terminal->nodetype) {
+        case NT_RETURN: {
+            struct return_ast *return_ast_ptr = (struct return_ast *) terminal;
+            struct ast *return_value = return_ast_ptr->value;
+            switch (return_value->nodetype) {
+                case NT_ATTR_NAME: {
+                    struct attr_name_ast *attr_name_ast_ptr = (struct attr_name_ast *) return_value;
+                    char *var = attr_name_ast_ptr->variable;
+                    if (strcmp(for_ast_ptr->var, var) == 0) {
+                        tab_print(db, filtered_table, schema);
+                        resp->status = 0;
+                        resp->message = strdup("Selected successfully");
+                        resp->table = filtered_table;
+                        return 0;
+
+                    } else {
+                        schema_t *second_schema = sch_load(second_table->schidx);
+                        tab_print(db, second_table, second_schema);
+                        resp->status = 0;
+                        resp->message = strdup("Selected successfully");
+                        resp->table = second_table;
+                        return 0;
+
+                    }
+                    break;
+                }
+                case NT_MERGE: {
+                    schema_t *second_schema = sch_load(second_table->schidx);
+                    table_t *restab = tab_join(db, filtered_table, schema, second_table, second_schema, "TEMP");
+                    schema_t *restab_schema = sch_load(restab->schidx);
+                    tab_print(db, restab, restab_schema);
+                    resp->status = 0;
+                    resp->message = strdup("Selected successfully");
+                    resp->table = restab;
+                    return 0;
+                }
+            }
+            break;
+        }
+
+    }
+    resp->message = strdup("Something went wrong");
+    resp->status = -1;
+    return -1;
 }
 
-int insert(db_t *db, struct ast *root) {
+int insert(db_t *db, struct ast *root, struct response *resp) {
     struct insert_ast *insert_ast_ptr = (struct insert_ast *) root;
     int64_t tabix = mtab_find_table_by_name(db->meta_table_idx, insert_ast_ptr->tabname);
     if (tabix == TABLE_FAIL) {
         logger(LL_ERROR, __func__, "Failed to find table %s", insert_ast_ptr->tabname);
+        resp->status = -1;
+        resp->message = strdup("Failed to find table");
         return -1;
     }
     table_t *table = tab_load(tabix);
     if (table == NULL) {
         logger(LL_ERROR, __func__, "Failed to load table %s", insert_ast_ptr->tabname);
+        resp->status = -1;
+        resp->message = strdup("Failed to load table");
         return -1;
     }
     struct ast *temp = insert_ast_ptr->list;
@@ -289,6 +418,8 @@ int insert(db_t *db, struct ast *root) {
     uint8_t *row = malloc(schema->slot_size);
     if (row == NULL) {
         logger(LL_ERROR, __func__, "Failed to allocate memory");
+        resp->status = -1;
+        resp->message = strdup("Failed to allocate memory");
         return -1;
     }
     memset(row, 0, schema->slot_size);
@@ -307,6 +438,8 @@ int insert(db_t *db, struct ast *root) {
             case DT_INT: {
                 if (pair_ast->value->nodetype != NT_INTVAL) {
                     logger(LL_ERROR, __func__, "Invalid type %d", pair_ast->value->nodetype);
+                    resp->status = -1;
+                    resp->message = strdupf("Invalid type %d", pair_ast->value->nodetype);
                     return -1;
                 }
                 struct nint *integer_val = (struct nint *) pair_ast->value;
@@ -317,6 +450,8 @@ int insert(db_t *db, struct ast *root) {
             case DT_FLOAT: {
                 if (pair_ast->value->nodetype != NT_FLOATVAL) {
                     logger(LL_ERROR, __func__, "Invalid type %d", pair_ast->value->nodetype);
+                    resp->status = -1;
+                    resp->message = strdupf("Invalid type %d", pair_ast->value->nodetype);
                     return -1;
                 }
                 struct nfloat *float_val = (struct nfloat *) pair_ast->value;
@@ -327,6 +462,8 @@ int insert(db_t *db, struct ast *root) {
             case DT_BOOL: {
                 if (pair_ast->value->nodetype != NT_BOOLVAL) {
                     logger(LL_ERROR, __func__, "Invalid type %d", pair_ast->value->nodetype);
+                    resp->status = -1;
+                    resp->message = strdupf("Invalid type %d", pair_ast->value->nodetype);
                     return -1;
                 }
                 struct nint *bool_val = (struct nint *) pair_ast->value;
@@ -337,6 +474,8 @@ int insert(db_t *db, struct ast *root) {
             case DT_VARCHAR: {
                 if (pair_ast->value->nodetype != NT_STRINGVAL) {
                     logger(LL_ERROR, __func__, "Invalid type %d", pair_ast->value->nodetype);
+                    resp->status = -1;
+                    resp->message = strdupf("Invalid type %d", pair_ast->value->nodetype);
                     return -1;
                 }
                 struct nstring *string_val = (struct nstring *) pair_ast->value;
@@ -346,6 +485,8 @@ int insert(db_t *db, struct ast *root) {
             }
             default: {
                 logger(LL_ERROR, __func__, "Invalid type %d", fieldi.type);
+                resp->status = -1;
+                resp->message = strdupf("Invalid type %d", fieldi.type);
                 return -1;
             }
 
@@ -353,15 +494,21 @@ int insert(db_t *db, struct ast *root) {
     }
     tab_insert(table, schema, row);
     tab_print(db, table, schema);
+    resp->status = 0;
+    resp->message = strdup("Row inserted successfully");
+
+    resp->table = table;
     free(row);
     return 0;
 }
 
-int create(db_t *db, struct ast *root) {
+int create(db_t *db, struct ast *root, struct response *resp) {
     struct create_ast *create_ast = (struct create_ast *) root;
     schema_t *schema = sch_init();
     if (schema == NULL) {
         logger(LL_ERROR, __func__, "Failed to create schema");
+        resp->status = -1;
+        resp->message = strdup("Failed to create schema");
         return -1;
     }
     struct list_ast *temp = (struct list_ast *) create_ast->difinitions;
@@ -392,34 +539,42 @@ int create(db_t *db, struct ast *root) {
     table_t *table = tab_init(db, create_ast->name, schema);
     if (table == NULL) {
         logger(LL_ERROR, __func__, "Failed to create table %s", create_ast->name);
+        resp->status = -1;
+        resp->message = strdup("Failed to create table");
         return -1;
     }
+    resp->status = 0;
+    resp->message = strdupf("Table %s created successfully", create_ast->name);
     return 0;
 }
 
-int reqexe(db_t *db, struct ast *root) {
+struct response *reqexe(db_t *db, struct ast *root) {
+    struct response *resp = malloc(sizeof(struct response));
     if (!root) {
         logger(LL_ERROR, __func__, "Root is NULL");
-        return -1;
+        resp->status = -1;
+        resp->message = strdup("Root is NULL");
+        return resp;
     }
-    int res = -1;
     switch (root->nodetype) {
         case NT_CREATE: {
-            res = create(db, root);
+            create(db, root, resp);
             break;
         }
         case NT_INSERT: {
-            res = insert(db, root);
+            insert(db, root, resp);
             break;
         }
         case NT_FOR: {
-            res = for_op(db, root);
+            for_op(db, root, resp);
             break;
         }
         default: {
             logger(LL_ERROR, __func__, "Invalid root type %d", root->nodetype);
-            return -1;
+            resp->status = -1;
+            resp->message = strdupf("Invalid root type %d", root->nodetype);
+            return resp;
         }
     }
-    return res;
+    return resp;
 }

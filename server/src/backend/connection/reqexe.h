@@ -4,6 +4,12 @@
 #include "ast.h"
 #include "backend/db/db.h"
 
-int reqexe(db_t *db, struct ast *root);
+struct response {
+    int status;
+    char* message;
+    table_t* table;
+};
+
+struct response* reqexe(db_t *db, struct ast *root);
 
 #endif

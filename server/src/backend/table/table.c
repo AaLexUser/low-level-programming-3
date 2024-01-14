@@ -69,35 +69,39 @@ void tab_print(db_t* db, table_t* table, schema_t* schema){
         logger(LL_ERROR, __func__, "Invalid argument, schema is NULL");
         return;
     }
+    sch_for_each(schema,chunka, fielda, sch_chblixa, table->schidx){
+        printf("%-25s\t", fielda.name);
+    }
+    printf("\n");
     void* row = malloc(schema->slot_size);
     tab_for_each_row(table, chunk, chblix,  row, schema){
         sch_for_each(schema,chunk2, field, sch_chblix, table->schidx){
             switch(field.type){
                 case DT_INT: {
                     int64_t val = *(int64_t*)((char*)row + field.offset);
-                    printf("%"PRId64"\t", val);
+                    printf("%-25"PRId64"\t", val);
                     break;
                 }
                 case DT_FLOAT: {
                     double val = *(double*)((char*)row + field.offset);
-                    printf("%f\t", val);
+                    printf("%-25.2f\t", val);
                     break;
                 }
                 case DT_CHAR: {
                     char* val = (char*)((char*)row + field.offset);
-                    printf("%s\t", val);
+                    printf("%-25s\t", val);
                     break;
                 }
                 case DT_BOOL: {
                     bool val = *(bool*)((char*)row + field.offset);
-                    printf("%d\t", val);
+                    printf("%-25d\t", val);
                     break;
                 }
                 case DT_VARCHAR: {
                     vch_ticket_t* vch = (vch_ticket_t*)((char*)row + field.offset);
                     char* str = malloc(vch->size);
                     vch_get(db->varchar_mgr_idx, vch, str);
-                    printf("%s\t", str);
+                    printf("%-25s\t", str);
                     free(str);
                     break;
                 }
@@ -127,7 +131,7 @@ void tab_print(db_t* db, table_t* table, schema_t* schema){
  * @return      pointer to the new table on success, NULL on failure
  */
 
-table_t* tab_join(
+table_t* tab_join_on_field(
         db_t* db,
         table_t* left,
         schema_t* left_schema,
@@ -216,6 +220,82 @@ table_t* tab_join(
     free(right_row);
     return table;
 }
+
+table_t* tab_join(db_t* db,
+                  table_t* left,
+                  schema_t* left_schema,
+                  table_t* right,
+                  schema_t* right_schema,
+                  const char* name){
+    /* Check if tables are NULL */
+    if(left == NULL){
+        logger(LL_ERROR, __func__, "Invalid argument, left table is NULL");
+        return NULL;
+    }
+    if(right == NULL){
+        logger(LL_ERROR, __func__, "Invalid argument, right table is NULL");
+        return NULL;
+    }
+
+    /* Check if schemas are NULL */
+    if(left_schema == NULL){
+        logger(LL_ERROR, __func__, "Invalid argument, left schema is NULL");
+        return NULL;
+    }
+    if(right_schema == NULL){
+        logger(LL_ERROR, __func__, "Invalid argument, right schema is NULL");
+        return NULL;
+    }
+
+    /* Create new schema */
+    schema_t* new_schema = sch_init();
+    if(new_schema == NULL){
+        logger(LL_ERROR, __func__, "Failed to create new schema");
+        return NULL;
+    }
+    sch_for_each(left_schema, chunk, left_field_t, left_chblix, left->schidx){
+        if(sch_add_field(new_schema, left_field_t.name, left_field_t.type, (int64_t)left_field_t.size) == SCHEMA_FAIL){
+            logger(LL_ERROR, __func__, "Failed to add field %s", left_field_t.name);
+            return NULL;
+        }
+    }
+    sch_for_each(right_schema,chunk2, right_field_t, right_chblix, right->schidx){
+        if(sch_add_field(new_schema, right_field_t.name, right_field_t.type, (int64_t)right_field_t.size) == SCHEMA_FAIL){
+            logger(LL_ERROR, __func__, "Failed to add field %s", right_field_t.name);
+            return NULL;
+        }
+    }
+
+    /* Create new table */
+    table_t* table = tab_init(db, name, new_schema);
+    if(table == NULL){
+        logger(LL_ERROR, __func__, "Failed to create new table");
+        return NULL;
+    }
+
+    /* Create new row */
+    void* row = malloc(new_schema->slot_size);
+
+    void* left_row = malloc(left_schema->slot_size);
+    void* right_row = malloc(right_schema->slot_size);
+
+    tab_for_each_row(left, left_chunk, leftt_chblix, left_row, left_schema){
+        tab_for_each_row(right, right_chunk,rightt_chblix, right_row, right_schema){
+            memcpy(row, left_row, left_schema->slot_size);
+            memcpy((char*)row + left_schema->slot_size, right_row, right_schema->slot_size);
+            chblix_t rowix = tab_insert(table, new_schema, row);
+            if(chblix_cmp(&rowix, &CHBLIX_FAIL) == 0){
+                logger(LL_ERROR, __func__, "Failed to insert row");
+                return NULL;
+            }
+        }
+    }
+    free(row);
+    free(left_row);
+    free(right_row);
+    return table;
+}
+
 
 /**
  * @brief       Select row form table on condition

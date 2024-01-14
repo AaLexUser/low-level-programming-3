@@ -258,13 +258,13 @@ DEFINE_TEST(join){
     sch_get_field(left_schema, "NAME", &left_field);
     field_t right_field;
     sch_get_field(right_schema, "NAME", &right_field);
-    table_t* join_tablix = tab_join(db,
-                                   left,
-                                   left_schema,
-                                   right,
-                                   right_schema,
-                                   &left_field,
-                                   &right_field,"JOIN");
+    table_t* join_tablix = tab_join_on_field(db,
+                                             left,
+                                             left_schema,
+                                             right,
+                                             right_schema,
+                                             &left_field,
+                                             &right_field, "JOIN");
     assert(join_tablix != NULL);
     tab_print(db, join_tablix, sch_load(join_tablix->schidx));
     db_drop();

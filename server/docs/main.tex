@@ -305,7 +305,7 @@ void tab_print(db_t* db,
 * @param[in]   name: name of the new table
 * @return      pointer to the new table on success, NULL on failure
 */                                  
-int64_t tab_join(
+int64_t tab_join_on_field(
         db_t* db,
         int64_t leftidx,
         int64_t rightidx,

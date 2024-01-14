@@ -14,7 +14,7 @@ chblix_t tab_get_row(db_t* db,
                      void* value,
                      datatype_t type);
 void tab_print(db_t* db, table_t* table, schema_t* schema);
-table_t* tab_join(
+table_t* tab_join_on_field(
         db_t* db,
         table_t* left,
         schema_t* left_schema,
@@ -62,3 +62,10 @@ table_t* tab_projection(db_t* db,
                         field_t* fields,
                         int64_t num_of_fields,
                         const char* name);
+
+table_t* tab_join(db_t* db,
+                  table_t* left,
+                  schema_t* left_schema,
+                  table_t* right,
+                  schema_t* right_schema,
+                  const char* name);

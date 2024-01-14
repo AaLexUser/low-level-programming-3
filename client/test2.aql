@@ -12,3 +12,22 @@ FOR u IN users FILTER u.score < 2 AND u.name == "Alex" UPDATE u WITH { score: 5 
 
 FOR u IN users FILTER u.score > 4 || u.name == "Alex" FOR s IN students FILTER u.name == s.name && "Alex" IN u.name RETURN MERGE(u,s)
 
+CREATE group WITH { group_id: int, name: string }
+FOR u IN users FILTER u.money == 100 RETURN u
+
+INSERT { group_id: 1, name: "P33102" } INTO group
+INSERT { group_id: 2, name: "M33103" } INTO group
+INSERT { group_id: 3, name: "G33104" } INTO group
+INSERT { group_id: 4, name: "Z33105" } INTO group
+INSERT { group_id: 5, name: "K33106" } INTO group
+
+INSERT { name: "Alex", lastname: "Lapin", student: true, money: 10000, score: 5.0 } INTO users
+INSERT { name: "Berman", lastname: "Clock", student: true, money: 232, score: 3.2 } INTO users
+INSERT { name: "Cristian", lastname: "Ronaldo", student: false, money: 100, score: 4.2 } INTO users
+INSERT { name: "Dima", lastname: "Koval", student: true, money: 2330, score: 2.1 } INTO users
+INSERT { name: "Egor", lastname: "Flagman", student: true, money: 100, score: 1.2 } INTO users
+INSERT { name: "Fedor", lastname: "Champion", student: false, money: 0, score: 5.0 } INTO users
+
+
+FOR u IN users FILTER u.money == 100 FOR g IN group RETURN MERGE(u,g)
+FOR u IN users FILTER u.money == 100 FOR g IN group RETURN g

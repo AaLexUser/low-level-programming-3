@@ -64,7 +64,9 @@ int main(int argc, char **argv)
             return -1;
         }
         xmlFree(xml);
-
+        char* response;
+        receive_message(sock, &response);
+        printf("%s\n", response);
     }
 
     close_connection(sock);

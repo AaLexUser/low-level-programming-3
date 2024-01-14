@@ -45,7 +45,7 @@ extern int yyerror(struct ast** ast, const char *s, ...);
 %type <ast> for_stmt for_first_stmt filter_list
 %type <ast> constant 
 %type <ast> filter_stmt conditions filter_expr filter_attr_name
-%type <ast> return_stmt attr_name return_document return_pairs return_pair merge
+%type <ast> return_stmt attr_name merge
 %type <ast> query terminal non_terminal_list 
 %type <ast> insert_stmt document pairs pair
 %type <ast> update_stmt remove_stmt drop_stmt
@@ -104,22 +104,14 @@ filter_expr: filter_attr_name CMP constant       { $$ = newfilter_expr($1, $3, $
 filter_attr_name: VARNAME '.' VARNAME         { $$ = newattr_name($1, $3); *root= $$;}
 
 /*---------------return-----------------*/
-return_stmt: RETURN attr_name             { $$ = newreturn($2); *root= $$;}
-    |    RETURN return_document           { $$ = newreturn($2); *root= $$;}
-    |    RETURN MERGE '(' merge ')'       { $$ = newreturn($4); *root= $$;}
+return_stmt: RETURN attr_name               { $$ = newreturn($2); *root= $$;}
+    |    RETURN MERGE '(' merge ')'         { $$ = newreturn($4); *root= $$;}
 
 merge: VARNAME ',' VARNAME                { $$ = newmerge($1, $3); *root= $$;}
     ;
 attr_name: VARNAME '.' VARNAME         { $$ = newattr_name($1, $3);*root= $$;}
     | VARNAME                          { $$ = newattr_name($1, NULL); *root= $$;}
     ;
-
-return_document: '{' return_pairs '}'               { $$ = $2; }
-    ;
-return_pairs: return_pair
-    | return_pairs ',' return_pair                  { $$ = newlist($3, $1);*root= $$;}
-    ;
-return_pair: VARNAME ':' attr_name                  { $$ = newpair($1, $3); *root= $$;}
 
 
 constant: INTVAL                         { $$ = newint($1); *root= $$;}

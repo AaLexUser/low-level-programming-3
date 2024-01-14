@@ -125,6 +125,11 @@ int read_socket(int sock, char** message)
 int write_socket(int sock, char *buffer, int size)
 {
     logger(LL_DEBUG, __func__, "Writing socket %d", sock);
+    if (send(sock, &size, sizeof(size), 0) < 0)
+    {
+        perror("Error sending message length");
+        return -1;
+    }
     int written = (int)send(sock, buffer, size, 0);
     if (written < 0)
     {
