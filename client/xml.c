@@ -188,7 +188,7 @@ char *ast2xml(struct ast *root)
     xmlChar *xmlbuff;
     int buffersize;
     xmlDocDumpFormatMemory(doc, &xmlbuff, &buffersize, 1);
-    xmlSaveFormatFileEnc("-", doc, "UTF-8", 1);
+    // xmlSaveFormatFileEnc("-", doc, "UTF-8", 1);
     xmlFreeDoc(doc);
     xmlCleanupParser();
     return (char *)xmlbuff;

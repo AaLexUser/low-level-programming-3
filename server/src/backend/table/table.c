@@ -74,19 +74,23 @@ void tab_print(db_t* db, table_t* table, schema_t* schema){
         sch_for_each(schema,chunk2, field, sch_chblix, table->schidx){
             switch(field.type){
                 case DT_INT: {
-                    printf("%"PRId64"\t", *(int64_t*)((char*)row + field.offset));
+                    int64_t val = *(int64_t*)((char*)row + field.offset);
+                    printf("%"PRId64"\t", val);
                     break;
                 }
                 case DT_FLOAT: {
-                    printf("%f\t", *(float *) ((char *) row + field.offset));
+                    double val = *(double*)((char*)row + field.offset);
+                    printf("%f\t", val);
                     break;
                 }
                 case DT_CHAR: {
-                    printf("%s\t", (char*)((char*)row + field.offset));
+                    char* val = (char*)((char*)row + field.offset);
+                    printf("%s\t", val);
                     break;
                 }
                 case DT_BOOL: {
-                    printf("%d\t", *(bool*)((char*)row + field.offset));
+                    bool val = *(bool*)((char*)row + field.offset);
+                    printf("%d\t", val);
                     break;
                 }
                 case DT_VARCHAR: {

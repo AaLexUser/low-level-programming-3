@@ -63,7 +63,7 @@ typedef enum {SCHEMA_SUCCESS = 0, SCHEMA_FAIL = -1, SCHEMA_NOT_FOUND = -2} schem
 #define sch_add_int_field(schema, name) sch_add_field((schema), name, DT_INT, sizeof(int64_t))
 #define sch_add_char_field(schema, name, size) sch_add_field((schema), name, DT_CHAR, size)
 #define sch_add_varchar_field(schema, name) sch_add_field((schema), name, DT_VARCHAR, sizeof(vch_ticket_t))
-#define sch_add_float_field(schema, name) sch_add_field((schema), name, DT_FLOAT, sizeof(float))
+#define sch_add_float_field(schema, name) sch_add_field((schema), name, DT_FLOAT, sizeof(double))
 #define sch_add_bool_field(schema, name) sch_add_field((schema), name, DT_BOOL, sizeof(bool))
 
 #define schema_index(schema) ((schema)->ppl_header.lp_header.page_index)

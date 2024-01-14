@@ -55,7 +55,9 @@ false       { yylval.ival = 0; return BOOLVAL; }
 
     /* strings */
 '(\\.|''|[^'\n])*'              |
-\"(\\.|\"\"|[^"\n])*\"          { yylval.sval = strdup(yytext); return STRINGVAL; }
+\"(\\.|\"\"|[^"\n])*\"          {   yylval.sval = strdup(yytext + 1); // Skip the initial quote
+                                    yylval.sval[strlen(yylval.sval) - 1] = '\0'; // Overwrite the last quote with null terminator
+                                    return STRINGVAL;}
 
 '(\\.|[^'\n])*$                 { yyerror(NULL, "unterminated string %s", yytext); }
 \"(\\.|[^"\n])*$                { yyerror(NULL, "unterminated string %s", yytext); }

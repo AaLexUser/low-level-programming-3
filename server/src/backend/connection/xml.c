@@ -30,16 +30,6 @@ xmlNodePtr get_next(xmlNodePtr node){
     return NULL;
 }
 
-xmlNodePtr get_prev(xmlNodePtr node){
-    xmlNodePtr prev = node->prev;
-    while(prev != NULL){
-        if(prev->type == XML_ELEMENT_NODE){
-            return prev;
-        }
-        prev = prev->prev;
-    }
-    return NULL;
-}
 
 ntype_t str_to_ntype(const char *type_str)
 {
@@ -70,9 +60,10 @@ struct ast* get_list(xmlNodePtr node){
     node = get_child(node);
     xmlNodePtr next = node;
     list = newlist(xml2ast(node), NULL);
+    next = get_next(next);
     while(next != NULL){
-        next = get_next(next);
         list = newlist(xml2ast(next), list);
+        next = get_next(next);
     }
     return list;
 }

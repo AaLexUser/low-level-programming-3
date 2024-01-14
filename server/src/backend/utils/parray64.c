@@ -219,7 +219,7 @@ int pa_push_unique64(int64_t paidx, int64_t value){
 int pa_delete_unique64(int64_t paidx, int64_t value){
     int64_t block_index = pa_find_first_int64(paidx, value);
     if(block_index == PA_FAIL){
-        logger(LL_INFO, __func__, "Value %ld not found in PArray %ld", value, paidx);
+        logger(LL_DEBUG, __func__, "Value %ld not found in PArray %ld", value, paidx);
         return PA_SUCCESS;
     }
     if(pa_delete64(paidx, block_index) != PA_SUCCESS){

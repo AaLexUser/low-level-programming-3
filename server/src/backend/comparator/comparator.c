@@ -17,7 +17,7 @@ data_t comp_cmp(db_t* db, datatype_t type, void* val1, void* val2){
             break;
         }
         case DT_FLOAT: {
-            data.float_val = *(float *) val1 - *(float *) val2;
+            data.float_val = *(double *) val1 - *(double *) val2;
             break;
         }
         case DT_CHAR: {

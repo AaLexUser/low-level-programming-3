@@ -4,7 +4,7 @@ CREATE users WITH { name: string, lastname: string, student: bool, money: int, s
 
 FOR v1 in people FILTER "hi" IN v1.name FOR v2 in students FOR v3 in students FOR v4 in students RETURN MERGE(v1,v2)
 
-INSERT { name: "Alex", lastname: "Lapin", student: true, money: 100, score: 5 } INTO users
+INSERT { name: "Alex", lastname: "Lapin", student: true, money: 100, score: 5.0 } INTO users
 
 FOR u IN users FILTER u.score < 2 REMOVE u IN users
 

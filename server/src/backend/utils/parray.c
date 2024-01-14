@@ -49,7 +49,7 @@ parray_t* pa_load(int64_t page_index){
  */
 
 int pa_destroy(int64_t page_index) {
-    logger(LL_INFO, __func__, "Destroying PArray");
+    logger(LL_DEBUG, __func__, "Destroying PArray");
     if (lp_delete(page_index) == LP_FAIL) {
         logger(LL_ERROR, __func__, "Unable to deallocate page");
         return PA_FAIL;
@@ -105,7 +105,7 @@ int pa_read(parray_t *parray, int64_t block_idx, void *dest, int64_t size, int64
     }
 
     if (parray->size == 0) {
-        logger(LL_INFO, __func__, "Unable to read from empty parray");
+        logger(LL_DEBUG, __func__, "Unable to read from empty parray");
         return PA_EMPTY;
     }
 
@@ -134,7 +134,7 @@ int pa_read(parray_t *parray, int64_t block_idx, void *dest, int64_t size, int64
  */
 
 int pa_read_blocks(int64_t paidx, int64_t stblidx, void *dest, int64_t size, int64_t src_offset){
-    logger(LL_INFO, __func__, "Reading blocks %ld bytes from PArray", size);
+    logger(LL_DEBUG, __func__, "Reading blocks %ld bytes from PArray", size);
     parray_t *pa = (parray_t *) lp_load(paidx);
     if (!pa) {
         logger(LL_ERROR, __func__, "Unable to load page");

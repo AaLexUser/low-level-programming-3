@@ -12,7 +12,7 @@ typedef enum datatype {DT_UNKNOWN = -1,
 
 typedef union data {
     int64_t int_val;
-    float float_val;
+    double float_val;
     char* char_val;
     bool bool_val;
     vch_ticket_t* vch_val;

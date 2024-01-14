@@ -50,7 +50,7 @@ int main(int argc, char **argv)
         if (strcmp(buffer, "exit") == 0)
         {
             sending_queries = false;
-            break;
+            continue;
         }
 
         struct ast *ast = parse_query(buffer);
