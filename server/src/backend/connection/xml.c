@@ -132,8 +132,8 @@ struct ast *xml2ast(xmlNode *node)
     else if (!xmlStrcmp(node->name, BAD_CAST "attr_name"))
     {
         char *variable = (char *)xmlGetProp(node, BAD_CAST "variable");
-        char *attrubute = (char *)xmlGetProp(node, BAD_CAST "attrubute");
-        ast_node = newattr_name(variable, attrubute);
+        char *attribute = (char *)xmlGetProp(node, BAD_CAST "attribute");
+        ast_node = newattr_name(variable, attribute);
     }
     else if (!xmlStrcmp(node->name, BAD_CAST "conditions"))
     {
@@ -291,4 +291,22 @@ char* response2xml(db_t* db, struct response* resp) {
     xmlDocDumpFormatMemory(doc, &xmlbuff, &buffersize, 1);
     xmlFreeDoc(doc);
     return (char*)xmlbuff;
+}
+
+int validate_request(char* xml_content){
+    xmlDocPtr doc = xmlReadMemory(xml_content, strlen(xml_content), NULL, NULL, 0);
+    if (doc == NULL) {
+        fprintf(stderr, "Failed to parse document\n");
+        return -1;
+    }
+    xmlSchemaParserCtxtPtr parserCtxt = xmlSchemaNewParserCtxt(PATH_TO_REQUEST_XSD);
+    xmlSchemaPtr schema = xmlSchemaParse(parserCtxt);
+    xmlSchemaValidCtxtPtr validCtxt = xmlSchemaNewValidCtxt(schema);
+    int ret = xmlSchemaValidateDoc(validCtxt, doc);
+    xmlSchemaFreeValidCtxt(validCtxt);
+    xmlSchemaFree(schema);
+    xmlSchemaFreeParserCtxt(parserCtxt);
+    xmlFreeDoc(doc);
+    xmlCleanupParser();
+    return ret == 0;
 }

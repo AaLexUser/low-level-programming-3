@@ -2,6 +2,8 @@ FOR u IN users RETURN u
 
 CREATE users WITH { name: string, lastname: string, student: bool, money: int, score: float}
 
+CREATE players WITH { username: string, player: bool, cash: int, score: float}
+
 FOR v1 in people FILTER "hi" IN v1.name FOR v2 in students FOR v3 in students FOR v4 in students RETURN MERGE(v1,v2)
 
 INSERT { name: "Alex", lastname: "Lapin", student: true, money: 100, score: 5.0 } INTO users
@@ -31,3 +33,8 @@ INSERT { name: "Fedor", lastname: "Champion", student: false, money: 0, score: 5
 
 FOR u IN users FILTER u.money == 100 FOR g IN group RETURN MERGE(u,g)
 FOR u IN users FILTER u.money == 100 FOR g IN group RETURN g
+
+FOR u IN users FILTER u.money == 100 FOR g IN group FILTER g.group_id == 3 RETURN MERGE(u,g)
+FOR g IN group FILTER g.group_id == 3 RETURN g
+
+DROP players

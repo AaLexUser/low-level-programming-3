@@ -56,7 +56,6 @@ int main(int argc, char **argv)
         struct ast *ast = parse_query(buffer);
 
         char *xml = ast2xml(ast);
-        printf("%s\n", xml);
 
         if (send_message(sock, xml) < 0)
         {
@@ -66,7 +65,11 @@ int main(int argc, char **argv)
         xmlFree(xml);
         char* response;
         receive_message(sock, &response);
-        printf("%s\n", response);
+        if(!validate_response(response)){
+            printf("Invalid response\n");
+            continue;
+        }
+        readable_response(response);
     }
 
     close_connection(sock);

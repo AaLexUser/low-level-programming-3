@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+    <!-- definition of simple elements -->
+    <xs:element name="int" type="xs:integer"/>
+    <xs:element name="string" type="xs:string"/>
+    <xs:element name="float" type="xs:float"/>
+    <xs:element name="bool" type="xs:string"/>
+
+    <!-- definition of attributes -->
+
+    <!-- definition of groups -->
+    <xs:group name="valueChoice">
+        <xs:choice>
+            <xs:element ref="int"/>
+            <xs:element ref="string"/>
+            <xs:element ref="float"/>
+            <xs:element ref="bool"/>
+        </xs:choice>
+    </xs:group>
+
+    <!-- definition of complex elements -->
+    <xs:element name="attr_name">
+        <xs:complexType>
+            <xs:attribute name="variable" type="xs:string" use="required"/>
+            <xs:attribute name="attribute" type="xs:string"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="filter_expr">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="attr_name"/>
+                <xs:group ref="valueChoice"/>
+            </xs:sequence>
+            <xs:attribute name="cmp" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="conditions">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="filter_expr"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="filter">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element ref="conditions"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="forSecondType">
+        <xs:sequence>
+            <xs:element name="list" type="forList" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+        <xs:attribute name="var" type="xs:string" use="required"/>
+        <xs:attribute name="tabname" type="xs:string" use="required"/>
+    </xs:complexType>
+
+    <xs:complexType name="forList">
+            <xs:sequence>
+                <xs:element ref="filter" minOccurs="0" maxOccurs="unbounded"/>
+                <xs:element name="for" type="forSecondType" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="merge">
+        <xs:complexType>
+            <xs:attribute name="var1" type="xs:string" use="required"/>
+            <xs:attribute name="var2" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="return">
+        <xs:complexType>
+            <xs:choice>
+                <xs:element ref="attr_name"/>
+                <xs:element ref="merge"/>
+            </xs:choice>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="for">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="list" type="forList" minOccurs="0" />
+                <xs:element ref="return" minOccurs="0" />
+            </xs:sequence>
+            <xs:attribute name="var" type="xs:string" use="required"/>
+            <xs:attribute name="tabname" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="pair">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:group ref="valueChoice"/>
+            </xs:sequence>
+            <xs:attribute name="key" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:complexType name="insertList">
+        <xs:sequence>
+            <xs:element ref="pair" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="insert">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="list" type="insertList" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+            <xs:attribute name="tabname" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="definition">
+        <xs:complexType>
+            <xs:attribute name="name" type="xs:string" use="required"/>
+            <xs:attribute name="type" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+    
+    <xs:complexType name="defList">
+        <xs:sequence>
+            <xs:element ref="definition" minOccurs="0" maxOccurs="unbounded"/>
+        </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="create">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="list" type="defList" minOccurs="0"/>
+            </xs:sequence>
+            <xs:attribute name="tabname" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="drop">
+        <xs:complexType>
+            <xs:attribute name="tabname" type="xs:string" use="required"/>
+        </xs:complexType>
+    </xs:element>
+
+
+
+    <xs:element name="root">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element ref="for" />
+                    <xs:element ref="insert" />
+                    <xs:element ref="create" />
+                    <xs:element ref="drop" />
+                </xs:choice>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>

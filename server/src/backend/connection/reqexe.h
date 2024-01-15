@@ -10,6 +10,6 @@ struct response {
     table_t* table;
 };
 
-struct response* reqexe(db_t *db, struct ast *root);
+int reqexe(db_t *db, struct ast *root, struct response* resp);
 
 #endif

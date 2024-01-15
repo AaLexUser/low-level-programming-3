@@ -1,0 +1,410 @@
+\documentclass[12pt,onecolumn]{article}
+\usepackage[utf8]{inputenc} % UTF8 input encoding
+\usepackage[T2A]{fontenc}   % T2A font encoding for Cyrillic script
+\usepackage[russian]{babel} % Russian language support
+\usepackage{listings}
+\usepackage{float}
+\usepackage{mathtools}
+\everymath{\displaystyle}
+\usepackage{listings} 
+\usepackage[usenames]{color}
+\usepackage{geometry}
+\usepackage{verbatim}
+\newcommand{\nparagraph}[1]{\paragraph{#1}\mbox{}\\}
+\geometry{
+  a4paper,
+  top=20mm, 
+  right=2mm, 
+  bottom=20mm, 
+  left=2mm
+}
+
+\lstdefinestyle{bash}{language=bash, 
+  basicstyle=\small\ttfamily,
+  commentstyle=\color{cyan},
+  stringstyle=\color{magenta}\ttfamily,
+  keywordstyle=\color{blue},
+  numbers=left,
+  numberstyle=\scriptsize,
+  numbersep=5pt,
+  frame=single,
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  tabsize=1,
+  inputencoding=utf8,
+  extendedchars=true,
+  literate={а}{{\selectfont\char224}}1
+          {б}{{\selectfont\char225}}1
+          {в}{{\selectfont\char226}}1
+          {г}{{\selectfont\char227}}1
+          {д}{{\selectfont\char228}}1
+          {е}{{\selectfont\char229}}1
+          {ё}{{\"e}}1
+          {ж}{{\selectfont\char230}}1
+          {з}{{\selectfont\char231}}1
+          {и}{{\selectfont\char232}}1
+          {й}{{\selectfont\char233}}1
+          {к}{{\selectfont\char234}}1
+          {л}{{\selectfont\char235}}1
+          {м}{{\selectfont\char236}}1
+          {н}{{\selectfont\char237}}1
+          {о}{{\selectfont\char238}}1
+          {п}{{\selectfont\char239}}1
+          {р}{{\selectfont\char240}}1
+          {с}{{\selectfont\char241}}1
+          {т}{{\selectfont\char242}}1
+          {у}{{\selectfont\char243}}1
+          {ф}{{\selectfont\char244}}1
+          {х}{{\selectfont\char245}}1
+          {ц}{{\selectfont\char246}}1
+          {ч}{{\selectfont\char247}}1
+          {ш}{{\selectfont\char248}}1
+          {щ}{{\selectfont\char249}}1
+          {ъ}{{\selectfont\char250}}1
+          {ы}{{\selectfont\char251}}1
+          {ь}{{\selectfont\char252}}1
+          {э}{{\selectfont\char253}}1
+          {ю}{{\selectfont\char254}}1
+          {я}{{\selectfont\char255}}1
+          {А}{{\selectfont\char192}}1
+          {Б}{{\selectfont\char193}}1
+          {В}{{\selectfont\char194}}1
+          {Г}{{\selectfont\char195}}1
+          {Д}{{\selectfont\char196}}1
+          {Е}{{\selectfont\char197}}1
+          {Ё}{{\"E}}1
+          {Ж}{{\selectfont\char198}}1
+          {З}{{\selectfont\char199}}1
+          {И}{{\selectfont\char200}}1
+          {Й}{{\selectfont\char201}}1
+          {К}{{\selectfont\char202}}1
+          {Л}{{\selectfont\char203}}1
+          {М}{{\selectfont\char204}}1
+          {Н}{{\selectfont\char205}}1
+          {О}{{\selectfont\char206}}1
+          {П}{{\selectfont\char207}}1
+          {Р}{{\selectfont\char208}}1
+          {С}{{\selectfont\char209}}1
+          {Т}{{\selectfont\char210}}1
+          {У}{{\selectfont\char211}}1
+          {Ф}{{\selectfont\char212}}1
+          {Х}{{\selectfont\char213}}1
+          {Ц}{{\selectfont\char214}}1
+          {Ч}{{\selectfont\char215}}1
+          {Ш}{{\selectfont\char216}}1
+          {Щ}{{\selectfont\char217}}1
+          {Ъ}{{\selectfont\char218}}1
+          {Ы}{{\selectfont\char219}}1
+          {Ь}{{\selectfont\char220}}1
+          {Э}{{\selectfont\char221}}1
+          {Ю}{{\selectfont\char222}}1
+          {Я}{{\selectfont\char223}}1
+}
+
+\begin{document}
+\setcounter{tocdepth}{4}
+\begin{center}
+    Федеральное государственное автономное образовательное учреждение высшего образования "Национальный Исследовательский Университет ИТМО"\\ 
+    Мегафакультет Компьютерных Технологий и Управления\\
+    Факультет Программной Инженерии и Компьютерной Техники \\
+    \includegraphics[scale=0.3]{image/itmo.jpg} % нужно закинуть картинку логтипа в папку с отчетом
+\end{center}
+\vspace{1cm}
+
+
+\begin{center}
+    \textbf{Лабораторная №3}\\
+    по дисциплине\\
+    \textbf{'Низкоуровневое программирование'}
+\end{center}
+
+\vspace{2cm}
+
+\begin{flushright}
+  Выполнил Студент  группы P33102\\
+  \textbf{Лапин Алексей Александрович}\\
+  Преподаватель: \\
+  \textbf{Кореньков Юрий Дмитриевич}\\
+\end{flushright}
+
+\vspace{6cm}
+\begin{center}
+    г. Санкт-Петербург\\
+    2023г.
+\end{center}
+
+\newpage
+\tableofcontents
+\newpage
+
+\section{Цель:}
+Выданный вариант задания: XML
+На базе данного транспортного формата описать схему протокола обмена информацией и воспользоваться существующей библиотекой по выбору для реализации модуля, обеспечивающего его функционирование.
+Протокол должен включать представление информации о командах создания, выборки, модификации и удаления данных в соответствии с данной формой, и результатах их выполнения.
+
+Используя созданные в результате выполнения заданий модули, разработать в виде консольного приложения две программы: клиентскую и серверную части. Серверная часть – получающая по сети запросы и операции описанного формата и последовательно выполняющая их над файлом данных с помощью модуля из первого задания. Имя фала данных для работы получать с аргументами командной строки, создавать новый в случае
+его отсутствия. Клиентская часть – в цикле получающая на стандартный ввод текст команд, извлекающая из него информацию о запрашиваемой операции с помощью модуля из второго задания и пересылающая её на сервер с помощью модуля для обмена информацией, получающая ответ и выводящая его в человеко-понятном виде в стандартный вывод.
+
+\section{Порядок выполнения:}
+\begin{enumerate}
+  \item  {
+    Изучить выбранную библиотеку
+    \begin{enumerate}
+      \item Библиотека должна обеспечивать сериализацию и десериализацию с валидацией в соответствии со схемой
+      \item Предпочтителен выбор библиотек, поддерживающих кодогенерацию на основе схемы
+      \item Библиотека может поддерживать передачу данных посредством TCP соединения
+      \begin{itemize}
+        \item Иначе, использовать сетевые сокеты посредством API ОС
+      \end{itemize}
+      \item Библиотека может обеспечивать диспетчеризацию удалённых вызовов
+      \begin{itemize}
+        \item Иначе, реализовать диспетчеризацию вызовов на основе информации о виде команды
+      \end{itemize}
+    \end{enumerate}
+  }
+  \item {
+    На основе существующей библиотеки реализовать модуль, обеспечивающий взаимодействие
+    \begin{enumerate}
+      \item Описать схему протокола в поддерживаемом библиотекой формате
+      \begin{itemize}
+        \item Описание должно включать информацию о командах, их аргументах и результатах
+        \item Схема может включать дополнительные сущности (например, для итератора)
+      \end{itemize}
+      \item Подключить библиотеку к проекту и сформировать публичный интерфейс модуля с использованием встроенных или сгенерированных структур данных используемой библиотеки
+      \begin{itemize}
+        \item Поддержать установление соединения, отправку команд и получение их результатов
+        \item Поддержать приём входящих соединений, приём команд и отправку их результатов
+      \end{itemize}
+      \item Реализовать публичный интерфейс посредством библиотеки в соответствии с п1
+    \end{enumerate}
+  }
+
+  \item {
+    Реализовать серверную часть в виде консольного приложения
+    \begin{enumerate}
+      \item В качестве аргументов командной строки приложение принимает:
+      \begin{itemize}
+        \item Адрес локальной конечной точки для прослушивания входящих соединений
+        \item Имя файла данных, который необходимо открыть, если он существует, иначе создать
+      \end{itemize}
+      \item Работает с файлом данных посредством модуля из задания 1
+      \item Принимает входящие соединения и взаимодействует с клиентами посредством модуля из п2
+      \item Поступающая информация о запрашиваемых операциях преобразуется из структур данных модуля взаимодействия к структурам данных модуля управления данными и наоборот
+    \end{enumerate}
+  }
+
+  \item {
+    Реализовать клиентскую часть в виде консольного приложения
+    \begin{enumerate}
+      \item В качестве аргументов командной строки приложение принимает адрес конечной точки для подключения
+      \item Подключается к серверу и взаимодействует с ним посредством модуля из п2
+      \item Читает со стандартного ввода текст команд и анализирует их посредством модуля из задания 2
+      \item Преобразует результат разбора команды к структурам данных модуля из п2, передаёт их для обработки на сервер, возвращаемые результаты выводит в стандартный поток вывода
+    \end{enumerate}
+  }
+
+  \item {
+    Результаты тестирования представить в виде отчёта, в который включить:
+    \begin{enumerate}
+      \item В части 3 привести пример сеанса работы разработанных программ
+      \item В части 4 описать решение, реализованное в соответствии с пп.2-4
+      \item В часть 5 включить составленную схему п.2а
+    \end{enumerate}
+  }
+
+\end{enumerate}
+\section{Описание работы и реализации:}
+\begin{itemize}
+  \item Использовалась библиотека libxml2 для работы с xml.
+  \item Сетевое взаимодействие реализовано посредством сокетов.
+  \item Перед отправкой сообщения отправляется его длина, это справедливо и для requests, и для response.
+  \item Ответ от сервера содержит в себе:
+  \begin{itemize}
+    \item Статус. ERROR – ошибка, OK – успешно
+    \item Сообщение.
+    \item Таблица(optional).
+  \end{itemize}
+\end{itemize}
+
+\subsection{Серверная часть}
+\begin{itemize}
+  \item Сервер принимает на вход 2 аргумента: адрес и порт.
+  \item После запуска сервер начинает слушать входящие соединения.
+  \item При подключении клиента, сервер создает новый поток, в котором обрабатывает запросы клиента.
+  \item При получении запроса, сервер десериализует его в ast, передает в модуль выполнения запроса.
+  \item После получения ответа от модуля выполнения запроса, сервер сериализует ответ в xml и отправляет его клиенту.
+\end{itemize}
+\subsubsection{Прием клиентов и старт сервера}
+\begin{lstlisting}[style=bash, language=C]
+  int main(int argc, char **argv) {
+    char *filename = DEFAULT_FILE;
+    int port = DEFAULT_PORT;
+    if (argc > 1) {
+        port = atoi(argv[1]);
+    }
+    if (argc > 2) {
+        filename = argv[2];
+    }
+
+
+    db_t *db = db_init(filename);
+
+    int sock = init_socket(port);
+    if (sock < 0) {
+        return 1;
+    }
+
+    if (listen_socket(sock) < 0) {
+        return 1;
+    }
+
+    logger(LL_INFO, __func__, "Listening on port %d", port);
+
+    signal(SIGTERM, sigint_handler);
+
+    FD_ZERO(&readfds); 
+    FD_SET(sock, &readfds); 
+    max_sd = sock; 
+
+
+    struct timeval timeout;
+    while (server_running) {
+        fd_set tmpfds = readfds; 
+        timeout.tv_sec = 1; // Set a timeout 1 second to allow periodic checks for server_running
+        timeout.tv_usec = 0;
+
+        int activity = select(max_sd + 1, &tmpfds, NULL, NULL, &timeout);
+
+        if ((activity < 0) && (errno != EINTR)) {
+            fprintf(stderr,"select error: %s", strerror(errno));
+            break;
+        }
+
+        if (activity > 0) {
+            // Check if the activity is on the server socket (new connection)
+            if (FD_ISSET(sock, &tmpfds)) {
+                int client = accept_socket(sock);
+                if (client < 0) {
+                    perror("accept failed");
+                    continue;
+                }
+
+                logger(LL_INFO, __func__, "Client %d connected", client);
+
+                // Add new socket to the array of sockets
+                FD_SET(client, &readfds);
+                if (client > max_sd) {
+                    max_sd = client; 
+                }
+
+                struct handler_args *args = malloc(sizeof(struct handler_args));
+                args->db = db;
+                args->client = client;
+
+                pthread_t client_thread;
+                if (pthread_create(&client_thread, NULL, (void *) client_handler, args) != 0) {
+                    perror("Failed to create thread");
+                    server_running = false;
+                    continue;
+                }
+                pthread_detach(client_thread);
+            }
+        }
+    }
+
+    for (int i = 0; i <= max_sd; i++) {
+        if (FD_ISSET(i, &readfds)) {
+            if(i != -1){
+                close_socket(i);
+            }
+        }
+    }
+    db_close();
+    return 0;
+}
+\end{lstlisting}
+
+\section{Результаты работы программы}
+
+
+\begin{lstlisting}[style=bash]
+  ./lab3-client 127.0.0.1 8080
+  > CREATE users WITH { name: string, lastname: string, student: bool, money: int, score: float}
+  Message: Table users created successfully
+  > CREATE group WITH { group_id: int, name: string }
+  Message: Table group created successfully  
+\end{lstlisting}
+
+\begin{lstlisting}[style=bash]
+  > INSERT { name: "Alex", lastname: "Lapin", student: true, money: 10000, score: 5.0 } INTO users
+  Message: Row inserted successfully
+  > INSERT { name: "Berman", lastname: "Clock", student: true, money: 232, score: 3.2 } INTO users
+  Message: Row inserted successfully
+  > INSERT { name: "Cristian", lastname: "Ronaldo", student: false, money: 100, score: 4.2 } INTO users
+  Message: Row inserted successfully
+  > INSERT { name: "Dima", lastname: "Koval", student: true, money: 2330, score: 2.1 } INTO users
+  Message: Row inserted successfully
+  > INSERT { name: "Egor", lastname: "Flagman", student: true, money: 100, score: 1.2 } INTO users
+  Message: Row inserted successfully
+  > INSERT { name: "Fedor", lastname: "Champion", student: false, money: 0, score: 5.0 } INTO users
+  Message: Row inserted successfully
+  > INSERT { group_id: 1, name: "P33102" } INTO group
+  Message: Row inserted successfully
+  > INSERT { group_id: 2, name: "M33103" } INTO group
+  Message: Row inserted successfully
+  > INSERT { group_id: 3, name: "G33104" } INTO group
+  Message: Row inserted successfully
+  > INSERT { group_id: 4, name: "Z33105" } INTO group
+  Message: Row inserted successfully
+  > INSERT { group_id: 5, name: "K33106" } INTO group
+  Message: Row inserted successfully
+\end{lstlisting}
+
+\begin{lstlisting}[style=bash]
+  > FOR u IN users FILTER u.money > 100 return u
+  Message: Selected successfully
+  Table:
+  name    lastname  student  money   score          
+  Alex    Lapin     true     10000   5.000000       
+  Berman  Clock     true     232     3.200000       
+  Dima    Koval     true     2330    2.100000
+
+
+  > FOR u IN users FILTER u.money == 100 FOR g IN group FILTER g.group_id == 3 RETURN MERGE(u,g)
+  Message: Selected successfully
+  Table:
+  name     lastname student money score     group_id  name           
+  Cristian Ronaldo  false   100   4.200000  3         G33104         
+  Egor     Flagman  true    100   1.200000  3         G33104
+
+  
+\end{lstlisting}
+
+\begin{lstlisting}[style=bash]
+  > CREATE players WITH { username: string, player: bool, cash: int, score: float}                                                             
+  Message: Table players created successfully                                                                                                  
+  > DROP players                                                                                                                               
+  Message: Table players dropped successfully                                                                                                  
+  > FOR p in players RETURN p                                                                                                                  
+  Message: Failed to find table players  
+\end{lstlisting}
+
+
+\section{Валидация xml схемы:}
+\subsection{response.xsd}
+\lstinputlisting[style=bash, language=XML]{../client/response.xsd}
+
+\subsection{request.xsd}
+\lstinputlisting[style=bash, language=XML]{../server/src/request.xsd}
+
+\section{Выводы:}
+
+\textbf{Что я узнал, чему научился:}
+\begin{enumerate}
+    \item Реализовать поддержку xml схемы в libxml2
+    \item Реализовать сетевое взаимодействие с помощью сокетов
+    \item Работать с xml сообщениями согласно схемам
+    \item Сериализовывать и десериализовывать xml сообщения в структуры данных и наоборот
+\end{enumerate}
+\end{document}

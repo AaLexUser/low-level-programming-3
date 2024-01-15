@@ -5,11 +5,11 @@
 #include "backend/connection/network.h"
 #include "backend/db/db.h"
 #include "backend/connection/reqexe.h"
+#include "backend/table/table.h"
 #include <signal.h>
 
 #define DEFAULT_FILE "main.db"
 #define DEFAULT_PORT 8080
-#define DEFAULT_BUFFER_SIZE 4096
 
 struct handler_args {
     db_t *db;
@@ -17,9 +17,13 @@ struct handler_args {
 };
 
 volatile sig_atomic_t server_running = 1;
+
 void sigint_handler(int sig) {
     server_running = 0;
 }
+
+fd_set readfds;
+int max_sd;
 
 
 void client_handler(struct handler_args *args) {
@@ -27,29 +31,41 @@ void client_handler(struct handler_args *args) {
     bool receiving_data = true;
 
     while (receiving_data) {
+        struct response *resp = malloc(sizeof(struct response));
         char *message;
         if (read_socket(args->client, &message) < 0) {
             receiving_data = false;
             continue;
         }
-        if(strcmp(message, "") == 0){
+        if (strcmp(message, "") == 0) {
             receiving_data = false;
             continue;
         }
         printf("Received: %s\n", message);
-        struct ast *root = parse_xml_to_ast(message);
-        print_ast(stdout, root, 0);
-        struct response* resp  = reqexe(args->db, root);
-        char* response_xml = response2xml(args->db, resp);
+        if(!validate_request(message)){
+            printf("Invalid request\n");
+            resp->message = strdup("Invalid request");
+            resp->status = -1;
+        }
+        else {
+            struct ast *root = parse_xml_to_ast(message);
+            print_ast(stdout, root, 0);
+            reqexe(args->db, root, resp);
+            free_ast(root);
+        }
+        char *response_xml = response2xml(args->db, resp);
         printf("Sending: %s\n", response_xml);
-        if (write_socket(args->client, response_xml, sizeof(response_xml)) < 0) {
+        if (write_socket(args->client, response_xml, (int)strlen(response_xml)) < 0) {
             receiving_data = false;
             continue;
         }
-        free_ast(root);
+        if(resp->table !=NULL && strcmp(resp->table->name,"TEMP") == 0){
+            tab_drop(args->db, resp->table);
+        }
         free(message);
         xmlFree(response_xml);
     }
+    FD_CLR(args->client, &readfds);
     close_socket(args->client);
     logger(LL_INFO, __func__, "Client %d disconnected", args->client);
 }
@@ -80,34 +96,63 @@ int main(int argc, char **argv) {
 
     signal(SIGTERM, sigint_handler);
 
-    fd_set readfds;
-    int max_sd;
+    FD_ZERO(&readfds);
+    FD_SET(sock, &readfds);
+    max_sd = sock;
 
-    FD_ZERO(&readfds); // Clear the socket set
-    FD_SET(sock, &readfds); // Add server socket to set
-    max_sd = sock; // Initially, the server socket is the max
 
+    struct timeval timeout;
     while (server_running) {
-        int client = accept_socket(sock);
-        if (client < 0) {
-            return 1;
+        fd_set tmpfds = readfds;
+        timeout.tv_sec = 1; // Set a timeout 1 second to allow periodic checks for server_running
+        timeout.tv_usec = 0;
+
+        int activity = select(max_sd + 1, &tmpfds, NULL, NULL, &timeout);
+
+        if ((activity < 0) && (errno != EINTR)) {
+            fprintf(stderr,"select error: %s", strerror(errno));
+            break;
         }
-        logger(LL_INFO, __func__, "Client %d connected", client);
 
-        struct handler_args *args = malloc(sizeof(struct handler_args));
-        args->db = db;
-        args->client = client;
+        if (activity > 0) {
+            // Check if the activity is on the server socket (new connection)
+            if (FD_ISSET(sock, &tmpfds)) {
+                int client = accept_socket(sock);
+                if (client < 0) {
+                    perror("accept failed");
+                    continue;
+                }
 
+                logger(LL_INFO, __func__, "Client %d connected", client);
 
-        pthread_t client_thread;
-        if (pthread_create(&client_thread, NULL, (void *) client_handler, args) != 0) {
-            perror("Failed to create thread");
-            server_running = false;
-            return 1;
+                // Add new socket to the array of sockets
+                FD_SET(client, &readfds);
+                if (client > max_sd) {
+                    max_sd = client;
+                }
+
+                struct handler_args *args = malloc(sizeof(struct handler_args));
+                args->db = db;
+                args->client = client;
+
+                pthread_t client_thread;
+                if (pthread_create(&client_thread, NULL, (void *) client_handler, args) != 0) {
+                    perror("Failed to create thread");
+                    server_running = false;
+                    continue;
+                }
+                pthread_detach(client_thread);
+            }
         }
-        pthread_detach(client_thread);
     }
-    close_socket(sock);
+
+    for (int i = 0; i <= max_sd; i++) {
+        if (FD_ISSET(i, &readfds)) {
+            if(i != -1){
+                close_socket(i);
+            }
+        }
+    }
     db_close();
     return 0;
 }
