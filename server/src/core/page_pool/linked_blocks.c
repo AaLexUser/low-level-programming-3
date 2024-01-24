@@ -762,7 +762,7 @@ int lb_load_nova_pppp(page_pool_t* ppl, chunk_t* chunk, chblix_t* chblix, linked
 }
 
 int lb_load_nova_ppp(page_pool_t* ppl, chblix_t* chblix, linked_block_t* linked_block){
-    chunk_t* chunk = ppl_load_chunk(chblix->block_idx);
+    chunk_t* chunk = ppl_load_chunk(chblix->chunk_idx);
     return ppl_read_block_nova(ppl,
                                (linked_page_t*)chunk,
                                chblix,

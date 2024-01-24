@@ -13,12 +13,12 @@ struct constant_val {
     };
 };
 
-char* strdupf(const char* format, ...) {
+char *strdupf(const char *format, ...) {
     va_list args;
     va_start(args, format);
     int length = vsnprintf(NULL, 0, format, args);
     va_end(args);
-    char* str = malloc(length + 1);
+    char *str = malloc(length + 1);
     va_start(args, format);
     vsprintf(str, format, args);
     va_end(args);
@@ -94,7 +94,6 @@ datatype_t get_type(int type) {
 }
 
 
-
 struct constant_val *get_constant(struct ast *constant) {
     struct constant_val *constant_val = malloc(sizeof(struct constant_val));
     if (constant->nodetype == NT_INTVAL) {
@@ -121,48 +120,51 @@ struct constant_val *get_constant(struct ast *constant) {
     return constant_val;
 }
 
-table_t *simple_condition(db_t *db, struct filter_condition_ast *root, table_t *table, schema_t *schema) {
-    table_t *result_table = NULL;
+void simple_condition(db_t *db,
+                      struct filter_condition_ast *root,
+                      row_likedlist_t* rll,
+                      schema_t *schema,
+                      struct response *resp) {
     struct filter_expr_ast *filter_expr_ptr = (struct filter_expr_ast *) root->l;
     struct attr_name_ast *attr_ptr = (struct attr_name_ast *) filter_expr_ptr->attr_name;
     field_t sel_field;
+
     if (sch_get_field(schema, attr_ptr->attr_name, &sel_field) == SCHEMA_NOT_FOUND) {
         logger(LL_ERROR, __func__, "Field not found %s", attr_ptr->attr_name);
+        return;
     }
+
     condition_t condition = get_condition(filter_expr_ptr->cmp);
     struct constant_val *constant_val = get_constant(filter_expr_ptr->constant);
+
     if (constant_val == NULL) {
         logger(LL_ERROR, __func__, "Failed to get constant");
-        return NULL;
+        return;
     }
+
+    void *value_ptr;
     switch (constant_val->type) {
-        case DT_INT: {
-            result_table = tab_select_op(db, table, schema, &sel_field, "TEMP", condition, &constant_val->int_val,
-                                         DT_INT);
-            break;
-        }
-        case DT_FLOAT: {
-            result_table = tab_select_op(db, table, schema, &sel_field, "TEMP", condition, &constant_val->float_val,
-                                         DT_FLOAT);
-            break;
-        }
-        case DT_BOOL: {
-            result_table = tab_select_op(db, table, schema, &sel_field, "TEMP", condition, &constant_val->bool_val,
-                                         DT_BOOL);
-            break;
-        }
-        case DT_VARCHAR: {
-            result_table = tab_select_op(db, table, schema, &sel_field, "TEMP", condition, constant_val->string_val,
-                                         DT_VARCHAR);
-            break;
-        }
-        default: {
+        case DT_INT: value_ptr = &constant_val->int_val; break;
+        case DT_FLOAT: value_ptr = &constant_val->float_val; break;
+        case DT_BOOL: value_ptr = &constant_val->bool_val; break;
+        case DT_VARCHAR: value_ptr = &constant_val->string_val; break;
+        default:
             logger(LL_ERROR, __func__, "Invalid type %d", constant_val->type);
-            return NULL;
-        }
+            resp->status = -1;
+            resp->message = strdupf("Invalid type %d", constant_val->type);
+            free(constant_val);
+            return;
     }
+    if(sel_field.type != constant_val->type){
+        logger(LL_ERROR, __func__, "Invalid field type %d", constant_val->type);
+        resp->status = -1;
+        resp->message = strdupf("Invalid field type %d", filter_expr_ptr->constant->nodetype);
+        free(constant_val);
+        return;
+    }
+
+    rll_filter(db, rll, &sel_field, condition, value_ptr, constant_val->type);
     free(constant_val);
-    return result_table;
 }
 
 //table_t *complex_condition(db_t *db, struct filter_condition_ast *root, table_t *table, schema_t *schema) {
@@ -184,20 +186,37 @@ table_t *simple_condition(db_t *db, struct filter_condition_ast *root, table_t *
 //
 //}
 
+void remove_rows(row_likedlist_t* rll){
+    row_node_t *current = rll->head;
+    while (current != NULL)
+    {
+        row_node_t *next = current->next;
+        rst_node_t *rst_current = current->rst_head;
+        while (rst_current != NULL)
+        {
+            rst_node_t *rst_next = rst_current->next;
+            tab_delete_row(rst_current->table, &rst_current->rowix);
+            rst_current = rst_next;
+        }
+        current = next;
+    }
+}
 
-table_t *filter(db_t *db, struct ast *root, table_t *table, schema_t *schema) {
-    table_t *result_table = NULL;
+
+row_likedlist_t *filter(db_t *db, struct ast *root, row_likedlist_t* rll, schema_t *schema, struct response *resp) {
+    row_likedlist_t *result_list = rll;
     struct filter_ast *filter_ast_ptr = (struct filter_ast *) root;
     struct filter_condition_ast *condition_ast_ptr = (struct filter_condition_ast *) filter_ast_ptr->conditions_tree_root;
     if (condition_ast_ptr->r != NULL && condition_ast_ptr->logic != -1) {
 
     } else {
-        result_table = simple_condition(db, condition_ast_ptr, table, schema);
+        simple_condition(db, condition_ast_ptr, rll, schema, resp);
     }
-    return result_table;
+    return result_list;
 }
 
-table_t *for_stmt(db_t *db, struct ast *root, struct response* resp) {
+
+row_likedlist_t *for_stmt(db_t *db, struct ast *root, struct response *resp) {
     struct for_ast *for_ast_ptr = (struct for_ast *) root;
     int64_t tabix = mtab_find_table_by_name(db->meta_table_idx, for_ast_ptr->tabname);
     if (tabix == TABLE_FAIL) {
@@ -216,29 +235,20 @@ table_t *for_stmt(db_t *db, struct ast *root, struct response* resp) {
     schema_t *schema = sch_load(table->schidx);
     struct list_ast *temp = (struct list_ast *) for_ast_ptr->nonterm_list_head;
     reverseList(&temp);
-    table_t *filtered_table = NULL;
+    row_likedlist_t *filtered_list = tab_table2rll(db, table);
     while (temp != NULL) {
         struct list_ast *list_ast = (struct list_ast *) temp;
         switch (list_ast->value->nodetype) {
             case NT_FILTER: {
-                table_t *temp_filter_tab = NULL;
-                bool droptab = false;
-                if (filtered_table != NULL) {
-                    temp_filter_tab = filtered_table;
-                    droptab = true;
-                } else {
-                    temp_filter_tab = table;
-                }
-                filtered_table = filter(db, list_ast->value, temp_filter_tab, schema);
-                if (filtered_table == NULL) {
+                filtered_list = filter(db, list_ast->value, filtered_list, schema, resp);
+                if (filtered_list == NULL) {
                     logger(LL_ERROR, __func__, "Failed to filter");
                     resp->status = -1;
                     resp->message = strdupf("Failed to filter");
                     return NULL;
                 }
-                if (droptab) {
-                    tab_drop(db, temp_filter_tab);
-                }
+                if(resp->status == -1)
+                    return NULL;
                 break;
             }
             default: {
@@ -250,20 +260,8 @@ table_t *for_stmt(db_t *db, struct ast *root, struct response* resp) {
         }
         temp = (struct list_ast *) list_ast->next;
     }
-    if (filtered_table == NULL) {
-        filtered_table = table;
-    }
-    return filtered_table;
+    return filtered_list;
 }
-
-int remove(table_t* table, schema_t* schema, table_t* filtered_tab){
-    uint8_t* row = malloc(schema->slot_size);
-    tab_for_each_row(filtered_tab, chunk, chblix, row, schema){
-        tab_delete(table_index(table), &chblix);
-    }
-    return 0;
-}
-
 
 
 int for_op(db_t *db, struct ast *root, struct response *resp) {
@@ -285,35 +283,26 @@ int for_op(db_t *db, struct ast *root, struct response *resp) {
     schema_t *schema = sch_load(table->schidx);
     struct list_ast *temp = (struct list_ast *) for_ast_ptr->nonterm_list_head;
     reverseList(&temp);
-    table_t *filtered_table = NULL;
-    table_t *second_table = NULL;
+    row_likedlist_t *filtered_list = tab_table2rll(db, table);
+    row_likedlist_t *second_rll = NULL;
     while (temp != NULL) {
         struct list_ast *list_ast = (struct list_ast *) temp;
         switch (list_ast->value->nodetype) {
             case NT_FILTER: {
-                table_t *temp_filter_tab = NULL;
-                bool droptab = false;
-                if (filtered_table != NULL) {
-                    temp_filter_tab = filtered_table;
-                    droptab = true;
-                } else {
-                    temp_filter_tab = table;
-                }
-                filtered_table = filter(db, list_ast->value, temp_filter_tab, schema);
-                if (filtered_table == NULL) {
+                filtered_list = filter(db, list_ast->value, filtered_list, schema, resp);
+                if (filtered_list == NULL) {
                     logger(LL_ERROR, __func__, "Failed to filter");
                     resp->status = -1;
                     resp->message = strdupf("Failed to filter");
                     return -1;
                 }
-                if (droptab) {
-                    tab_drop(db, temp_filter_tab);
-                }
+                if(resp->status == -1)
+                    return -1;
                 break;
             }
             case NT_FOR: {
-                second_table = for_stmt(db, list_ast->value, resp);
-                if(second_table == NULL){
+                second_rll = for_stmt(db, list_ast->value, resp);
+                if (second_rll == NULL) {
                     return -1;
                 }
                 break;
@@ -328,9 +317,6 @@ int for_op(db_t *db, struct ast *root, struct response *resp) {
         temp = (struct list_ast *) list_ast->next;
     }
 
-    if (filtered_table == NULL) {
-        filtered_table = table;
-    }
     struct ast *terminal = for_ast_ptr->terminal;
     switch (terminal->nodetype) {
         case NT_RETURN: {
@@ -340,33 +326,33 @@ int for_op(db_t *db, struct ast *root, struct response *resp) {
                 case NT_ATTR_NAME: {
                     struct attr_name_ast *attr_name_ast_ptr = (struct attr_name_ast *) return_value;
                     char *var = attr_name_ast_ptr->variable;
+
                     if (strcmp(for_ast_ptr->var, var) == 0) {
+                        table_t* filtered_table = tab_rll2table(db, filtered_list,"TEMP");
                         tab_print(db, filtered_table, schema);
                         resp->status = 0;
                         resp->message = strdup("Selected successfully");
                         resp->table = filtered_table;
-                        return 0;
 
                     } else {
-                        schema_t *second_schema = sch_load(second_table->schidx);
-                        tab_print(db, second_table, second_schema);
+                        table_t* second_table = tab_rll2table(db, second_rll,"TEMP");
+                        tab_print(db, second_table, second_rll->schema);
                         resp->status = 0;
                         resp->message = strdup("Selected successfully");
                         resp->table = second_table;
-                        return 0;
 
                     }
                     break;
                 }
                 case NT_MERGE: {
-                    schema_t *second_schema = sch_load(second_table->schidx);
-                    table_t *restab = tab_join(db, filtered_table, schema, second_table, second_schema, "TEMP");
-                    schema_t *restab_schema = sch_load(restab->schidx);
-                    tab_print(db, restab, restab_schema);
+                    if(filtered_list->schema == NULL || second_rll->schema == NULL)
+                    rll_join(db, filtered_list, second_rll);
+                    table_t *restab = tab_rll2table(db, filtered_list, "TEMP");
+                    tab_print(db, restab, filtered_list->schema);
                     resp->status = 0;
                     resp->message = strdup("Selected successfully");
                     resp->table = restab;
-                    return 0;
+                    break;
                 }
             }
             break;
@@ -377,48 +363,42 @@ int for_op(db_t *db, struct ast *root, struct response *resp) {
             struct attr_name_ast *attr_name_ast_ptr = (struct attr_name_ast *) remove_ast_ptr->attr;
             char *var = attr_name_ast_ptr->variable;
             if (strcmp(for_ast_ptr->var, var) == 0) {
-
-                return 0;
+                remove_rows(filtered_list);
             } else {
-                schema_t *second_schema = sch_load(second_table->schidx);
-                tab_print(db, second_table, second_schema);
-                resp->status = 0;
-                resp->message = strdup("Selected successfully");
-                resp->table = second_table;
-                return 0;
-
+                remove_rows(second_rll);
             }
-
-
-
-
-            tab_for_each_row(filtered_table)
+            resp->status = 0;
+            resp->message = strdup("Removed successfully");
             break;
         }
-
+        default:{
+            logger(LL_ERROR, __func__, "Invalid type %d", terminal->nodetype);
+            resp->status = -1;
+            resp->message = strdupf("Invalid type %d", terminal->nodetype);
+        }
     }
-    resp->message = strdup("Something went wrong");
-    resp->status = -1;
-    return -1;
+    if(filtered_list!= NULL) row_likedlist_free(filtered_list);
+    if(second_rll!= NULL) row_likedlist_free(second_rll);
+    return 0;
 }
 
-int drop(db_t* db, struct ast* root, struct response *resp){
-    struct drop_ast* drop_ast_ptr = (struct drop_ast*) root;
+int drop(db_t *db, struct ast *root, struct response *resp) {
+    struct drop_ast *drop_ast_ptr = (struct drop_ast *) root;
     int64_t tabix = mtab_find_table_by_name(db->meta_table_idx, drop_ast_ptr->name);
-    if(tabix == -1){
+    if (tabix == -1) {
         logger(LL_ERROR, __func__, "Failed to find table %s", drop_ast_ptr->name);
         resp->status = -1;
         resp->message = strdupf("Failed to find table %s", drop_ast_ptr->name);
         return -1;
     }
-    table_t* table = tab_load(tabix);
-    if(table == NULL){
+    table_t *table = tab_load(tabix);
+    if (table == NULL) {
         logger(LL_ERROR, __func__, "Failed to load table %s", drop_ast_ptr->name);
         resp->status = -1;
         resp->message = strdupf("Failed to load table %s", drop_ast_ptr->name);
         return -1;
     }
-    if(tab_drop(db, table) == -1){
+    if (tab_drop(db, table) == -1) {
         logger(LL_ERROR, __func__, "Failed to drop table %s", drop_ast_ptr->name);
         resp->status = -1;
         resp->message = strdupf("Failed to drop table %s", drop_ast_ptr->name);
@@ -577,7 +557,7 @@ int create(db_t *db, struct ast *root, struct response *resp) {
     return 0;
 }
 
-int reqexe(db_t *db, struct ast *root, struct response* resp) {
+int reqexe(db_t *db, struct ast *root, struct response *resp) {
     if (!root) {
         logger(LL_ERROR, __func__, "Root is NULL");
         resp->status = -1;
@@ -597,7 +577,7 @@ int reqexe(db_t *db, struct ast *root, struct response* resp) {
             for_op(db, root, resp);
             break;
         }
-        case NT_DROP:{
+        case NT_DROP: {
             drop(db, root, resp);
             break;
         }

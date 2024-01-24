@@ -1,6 +1,7 @@
 FOR u IN users RETURN u
 
 CREATE users WITH { name: string, lastname: string, student: bool, money: int, score: float}
+CREATE group WITH { group_id: int, name: string }
 
 CREATE players WITH { username: string, player: bool, cash: int, score: float}
 
@@ -8,14 +9,14 @@ FOR v1 in people FILTER "hi" IN v1.name FOR v2 in students FOR v3 in students FO
 
 INSERT { name: "Alex", lastname: "Lapin", student: true, money: 100, score: 5.0 } INTO users
 
-FOR u IN users FILTER u.score < 2 REMOVE u IN users
+FOR u IN users FILTER u.score < 5.0 REMOVE u IN users
 
 FOR u IN users FILTER u.score < 2 AND u.name == "Alex" UPDATE u WITH { score: 5 } IN users
 
 FOR u IN users FILTER u.score > 4 || u.name == "Alex" FOR s IN students FILTER u.name == s.name && "Alex" IN u.name RETURN MERGE(u,s)
 
-CREATE group WITH { group_id: int, name: string }
 FOR u IN users FILTER u.money == 100 RETURN u
+FOR u IN users FILTER u.score < 5.0 RETURN u
 
 INSERT { group_id: 1, name: "P33102" } INTO group
 INSERT { group_id: 2, name: "M33103" } INTO group

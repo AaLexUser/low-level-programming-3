@@ -18,7 +18,7 @@
                                     </xs:sequence>
                                 </xs:complexType>
                             </xs:element>
-                            <xs:element name="rows">
+                            <xs:element name="rows" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
                                         <xs:element name="row" maxOccurs="unbounded">

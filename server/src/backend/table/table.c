@@ -10,13 +10,13 @@
  * @return      index of the table on success, TABLE_FAIL on failure
  */
 
-table_t* tab_init(db_t* db, const char* name, schema_t* schema){
-    table_t* table = NULL;
-    if((table = tab_base_init(name, schema)) == NULL){
+table_t *tab_init(db_t *db, const char *name, schema_t *schema) {
+    table_t *table = NULL;
+    if ((table = tab_base_init(name, schema)) == NULL) {
         logger(LL_ERROR, __func__, "Unable to init table");
         return NULL;
     }
-    mtab_add(db->meta_table_idx, name,table_index(table));
+    mtab_add(db->meta_table_idx, name, table_index(table));
     return table;
 }
 
@@ -31,19 +31,19 @@ table_t* tab_init(db_t* db, const char* name, schema_t* schema){
  * @return      chblix_t of row on success, CHBLIX_FAIL on failure
  */
 
-chblix_t tab_get_row(db_t* db, table_t* table, schema_t* schema, field_t* field, void* value, datatype_t type){
-    if(table == NULL){
+chblix_t tab_get_row(db_t *db, table_t *table, schema_t *schema, field_t *field, void *value, datatype_t type) {
+    if (table == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, table is NULL");
         return CHBLIX_FAIL;
     }
 
-    if(schema == NULL){
+    if (schema == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, schema is NULL");
         return CHBLIX_FAIL;
     }
-    void* element = malloc(field->size);
-    tab_for_each_element(table, chunk, chblix, element, field){
-        if(comp_eq(db, type, element, value)){
+    void *element = malloc(field->size);
+    tab_for_each_element(table, chunk, chblix, element, field) {
+        if (comp_eq(db, type, element, value)) {
             free(element);
             return chblix;
         }
@@ -59,47 +59,47 @@ chblix_t tab_get_row(db_t* db, table_t* table, schema_t* schema, field_t* field,
  * @param[in]   schema: pointer to the schema
  */
 
-void tab_print(db_t* db, table_t* table, schema_t* schema){
-    if(table == NULL){
+void tab_print(db_t *db, table_t *table, schema_t *schema) {
+    if (table == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, table is NULL");
         return;
     }
 
-    if(schema == NULL){
+    if (schema == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, schema is NULL");
         return;
     }
-    sch_for_each(schema,chunka, fielda, sch_chblixa, table->schidx){
+    sch_for_each(schema, chunka, fielda, sch_chblixa, table->schidx) {
         printf("%-25s\t", fielda.name);
     }
     printf("\n");
-    void* row = malloc(schema->slot_size);
-    tab_for_each_row(table, chunk, chblix,  row, schema){
-        sch_for_each(schema,chunk2, field, sch_chblix, table->schidx){
-            switch(field.type){
+    void *row = malloc(schema->slot_size);
+    tab_for_each_row(table, chunk, chblix, row, schema) {
+        sch_for_each(schema, chunk2, field, sch_chblix, table->schidx) {
+            switch (field.type) {
                 case DT_INT: {
-                    int64_t val = *(int64_t*)((char*)row + field.offset);
+                    int64_t val = *(int64_t *) ((char *) row + field.offset);
                     printf("%-25"PRId64"\t", val);
                     break;
                 }
                 case DT_FLOAT: {
-                    double val = *(double*)((char*)row + field.offset);
+                    double val = *(double *) ((char *) row + field.offset);
                     printf("%-25.2f\t", val);
                     break;
                 }
                 case DT_CHAR: {
-                    char* val = (char*)((char*)row + field.offset);
+                    char *val = (char *) ((char *) row + field.offset);
                     printf("%-25s\t", val);
                     break;
                 }
                 case DT_BOOL: {
-                    bool val = *(bool*)((char*)row + field.offset);
+                    bool val = *(bool *) ((char *) row + field.offset);
                     printf("%-25d\t", val);
                     break;
                 }
                 case DT_VARCHAR: {
-                    vch_ticket_t* vch = (vch_ticket_t*)((char*)row + field.offset);
-                    char* str = malloc(vch->size);
+                    vch_ticket_t *vch = (vch_ticket_t *) ((char *) row + field.offset);
+                    char *str = malloc(vch->size);
                     vch_get(db->varchar_mgr_idx, vch, str);
                     printf("%-25s\t", str);
                     free(str);
@@ -131,82 +131,84 @@ void tab_print(db_t* db, table_t* table, schema_t* schema){
  * @return      pointer to the new table on success, NULL on failure
  */
 
-table_t* tab_join_on_field(
-        db_t* db,
-        table_t* left,
-        schema_t* left_schema,
-        table_t* right,
-        schema_t* right_schema,
-        field_t* join_field_left,
-        field_t* join_field_right,
-        const char* name){
+table_t *tab_join_on_field(
+        db_t *db,
+        table_t *left,
+        schema_t *left_schema,
+        table_t *right,
+        schema_t *right_schema,
+        field_t *join_field_left,
+        field_t *join_field_right,
+        const char *name) {
 
     /* Check if tables are NULL */
-    if(left == NULL){
+    if (left == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, left table is NULL");
         return NULL;
     }
-    if(right == NULL){
+    if (right == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, right table is NULL");
         return NULL;
     }
 
     /* Check if schemas are NULL */
-    if(left_schema == NULL){
+    if (left_schema == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, left schema is NULL");
         return NULL;
     }
-    if(right_schema == NULL){
+    if (right_schema == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, right schema is NULL");
         return NULL;
     }
 
     /* Create new schema */
-    schema_t* new_schema = sch_init();
-    if(new_schema == NULL){
+    schema_t *new_schema = sch_init();
+    if (new_schema == NULL) {
         logger(LL_ERROR, __func__, "Failed to create new schema");
         return NULL;
     }
-    sch_for_each(left_schema, chunk, left_field_t, left_chblix, left->schidx){
-        if(sch_add_field(new_schema, left_field_t.name, left_field_t.type, (int64_t)left_field_t.size) == SCHEMA_FAIL){
+    sch_for_each(left_schema, chunk, left_field_t, left_chblix, left->schidx) {
+        if (sch_add_field(new_schema, left_field_t.name, left_field_t.type, (int64_t) left_field_t.size) ==
+            SCHEMA_FAIL) {
             logger(LL_ERROR, __func__, "Failed to add field %s", left_field_t.name);
             return NULL;
         }
     }
-    sch_for_each(right_schema,chunk2, right_field_t, right_chblix, right->schidx){
-        if(sch_add_field(new_schema, right_field_t.name, right_field_t.type, (int64_t)right_field_t.size) == SCHEMA_FAIL){
+    sch_for_each(right_schema, chunk2, right_field_t, right_chblix, right->schidx) {
+        if (sch_add_field(new_schema, right_field_t.name, right_field_t.type, (int64_t) right_field_t.size) ==
+            SCHEMA_FAIL) {
             logger(LL_ERROR, __func__, "Failed to add field %s", right_field_t.name);
             return NULL;
         }
     }
 
     /* Create new table */
-    table_t* table = tab_init(db, name, new_schema);
-    if(table == NULL){
+    table_t *table = tab_init(db, name, new_schema);
+    if (table == NULL) {
         logger(LL_ERROR, __func__, "Failed to create new table");
         return NULL;
     }
 
     /* Create new row */
-    void* row = malloc(new_schema->slot_size);
+    void *row = malloc(new_schema->slot_size);
 
-    void* left_row = malloc(left_schema->slot_size);
-    void* right_row = malloc(right_schema->slot_size);
+    void *left_row = malloc(left_schema->slot_size);
+    void *right_row = malloc(right_schema->slot_size);
 
 
 
     /* Join */
-    void* elleft = malloc(join_field_left->size);
-    void* elright = malloc(join_field_right->size);
-    tab_for_each_row(left, left_chunk, leftt_chblix, left_row, left_schema){
-        memcpy(elleft, (char*)left_row + join_field_left->offset, join_field_left->size);
-        tab_for_each_row(right, right_chunk,rightt_chblix, right_row, right_schema){
-            memcpy(elright, (char*)right_row + join_field_right->offset, join_field_right->size);
-            if(comp_eq(db, join_field_left->type, elleft, elright)){
+    void *elleft = malloc(join_field_left->size);
+    void *elright = malloc(join_field_right->size);
+    tab_for_each_row(left, left_chunk, leftt_chblix, left_row, left_schema) {
+        memcpy(elleft, (char *) left_row + join_field_left->offset, join_field_left->size);
+        tab_for_each_row(right, right_chunk, rightt_chblix, right_row, right_schema) {
+            memcpy(elright, (char *) right_row + join_field_right->offset, join_field_right->size);
+            if (comp_eq(db, join_field_left->type, elleft, elright)) {
                 memcpy(row, left_row, left_schema->slot_size);
-                memcpy((char*)row + left_schema->slot_size, right_row, right_schema->slot_size);
+                memcpy((char *) row + left_schema->slot_size, right_row, right_schema->slot_size);
                 chblix_t rowix = tab_insert(table, new_schema, row);
-                if(chblix_cmp(&rowix, &CHBLIX_FAIL) == 0){
+                if (chblix_cmp(&rowix, &CHBLIX_FAIL) == 0) {
                     logger(LL_ERROR, __func__, "Failed to insert row");
                     return NULL;
                 }
@@ -221,70 +223,72 @@ table_t* tab_join_on_field(
     return table;
 }
 
-table_t* tab_join(db_t* db,
-                  table_t* left,
-                  schema_t* left_schema,
-                  table_t* right,
-                  schema_t* right_schema,
-                  const char* name){
+table_t *tab_join(db_t *db,
+                  table_t *left,
+                  schema_t *left_schema,
+                  table_t *right,
+                  schema_t *right_schema,
+                  const char *name) {
     /* Check if tables are NULL */
-    if(left == NULL){
+    if (left == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, left table is NULL");
         return NULL;
     }
-    if(right == NULL){
+    if (right == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, right table is NULL");
         return NULL;
     }
 
     /* Check if schemas are NULL */
-    if(left_schema == NULL){
+    if (left_schema == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, left schema is NULL");
         return NULL;
     }
-    if(right_schema == NULL){
+    if (right_schema == NULL) {
         logger(LL_ERROR, __func__, "Invalid argument, right schema is NULL");
         return NULL;
     }
 
     /* Create new schema */
-    schema_t* new_schema = sch_init();
-    if(new_schema == NULL){
+    schema_t *new_schema = sch_init();
+    if (new_schema == NULL) {
         logger(LL_ERROR, __func__, "Failed to create new schema");
         return NULL;
     }
-    sch_for_each(left_schema, chunk, left_field_t, left_chblix, left->schidx){
-        if(sch_add_field(new_schema, left_field_t.name, left_field_t.type, (int64_t)left_field_t.size) == SCHEMA_FAIL){
+    sch_for_each(left_schema, chunk, left_field_t, left_chblix, left->schidx) {
+        if (sch_add_field(new_schema, left_field_t.name, left_field_t.type, (int64_t) left_field_t.size) ==
+            SCHEMA_FAIL) {
             logger(LL_ERROR, __func__, "Failed to add field %s", left_field_t.name);
             return NULL;
         }
     }
-    sch_for_each(right_schema,chunk2, right_field_t, right_chblix, right->schidx){
-        if(sch_add_field(new_schema, right_field_t.name, right_field_t.type, (int64_t)right_field_t.size) == SCHEMA_FAIL){
+    sch_for_each(right_schema, chunk2, right_field_t, right_chblix, right->schidx) {
+        if (sch_add_field(new_schema, right_field_t.name, right_field_t.type, (int64_t) right_field_t.size) ==
+            SCHEMA_FAIL) {
             logger(LL_ERROR, __func__, "Failed to add field %s", right_field_t.name);
             return NULL;
         }
     }
 
     /* Create new table */
-    table_t* table = tab_init(db, name, new_schema);
-    if(table == NULL){
+    table_t *table = tab_init(db, name, new_schema);
+    if (table == NULL) {
         logger(LL_ERROR, __func__, "Failed to create new table");
         return NULL;
     }
 
     /* Create new row */
-    void* row = malloc(new_schema->slot_size);
+    void *row = malloc(new_schema->slot_size);
 
-    void* left_row = malloc(left_schema->slot_size);
-    void* right_row = malloc(right_schema->slot_size);
+    void *left_row = malloc(left_schema->slot_size);
+    void *right_row = malloc(right_schema->slot_size);
 
-    tab_for_each_row(left, left_chunk, leftt_chblix, left_row, left_schema){
-        tab_for_each_row(right, right_chunk,rightt_chblix, right_row, right_schema){
+    tab_for_each_row(left, left_chunk, leftt_chblix, left_row, left_schema) {
+        tab_for_each_row(right, right_chunk, rightt_chblix, right_row, right_schema) {
             memcpy(row, left_row, left_schema->slot_size);
-            memcpy((char*)row + left_schema->slot_size, right_row, right_schema->slot_size);
+            memcpy((char *) row + left_schema->slot_size, right_row, right_schema->slot_size);
             chblix_t rowix = tab_insert(table, new_schema, row);
-            if(chblix_cmp(&rowix, &CHBLIX_FAIL) == 0){
+            if (chblix_cmp(&rowix, &CHBLIX_FAIL) == 0) {
                 logger(LL_ERROR, __func__, "Failed to insert row");
                 return NULL;
             }
@@ -310,55 +314,55 @@ table_t* tab_join(db_t* db,
  * @return      pointer to new table on success, NULL on failure
  */
 
-table_t* tab_select_op(db_t* db,
-                            table_t* sel_table,
-                            schema_t* sel_schema,
-                            field_t* select_field,
-                            const char* name,
-                            condition_t condition,
-                            void* value,
-                            datatype_t type) {
+table_t *tab_select_op(db_t *db,
+                       table_t *sel_table,
+                       schema_t *sel_schema,
+                       field_t *select_field,
+                       const char *name,
+                       condition_t condition,
+                       void *value,
+                       datatype_t type) {
     /* Create new schema */
-    schema_t* schema = sch_init();
-    if(schema == NULL){
+    schema_t *schema = sch_init();
+    if (schema == NULL) {
         logger(LL_ERROR, __func__, "Failed to create new schema");
         return NULL;
     }
-    sch_for_each(sel_schema, sch_chunk, field, chblix, sel_table->schidx){
-        if(sch_add_field(schema, field.name, field.type, (int64_t)field.size) == SCHEMA_FAIL){
+    sch_for_each(sel_schema, sch_chunk, field, chblix, sel_table->schidx) {
+        if (sch_add_field(schema, field.name, field.type, (int64_t) field.size) == SCHEMA_FAIL) {
             logger(LL_ERROR, __func__, "Failed to add field %s", field.name);
             return NULL;
         }
     }
 
     /* Create new table */
-    table_t* table = tab_init(db, name, schema);
-    if(table == NULL){
+    table_t *table = tab_init(db, name, schema);
+    if (table == NULL) {
         logger(LL_ERROR, __func__, "Failed to create new table");
         return NULL;
     }
 
     /* Create new row */
-    void* row = malloc(schema->slot_size);
+    void *row = malloc(schema->slot_size);
 
     /* Check if datatype of field equals datatype of value */
-    if(type != select_field->type){
+    if (type != select_field->type) {
         free(row);
         return NULL;
     }
 
-    void* el_row = malloc(sel_schema->slot_size);
-    void* el = malloc(select_field->size);
-    void* comp_val = malloc(select_field->size);
+    void *el_row = malloc(sel_schema->slot_size);
+    void *el = malloc(select_field->size);
+    void *comp_val = malloc(select_field->size);
     memcpy(comp_val, value, select_field->size);
 
     /* Select */
-    tab_for_each_row(sel_table, tab_chunk, sel_chblix, el_row, sel_schema){
-        memcpy(el, (char*)el_row + select_field->offset, select_field->size);
-        if(comp_compare(db, type, el,comp_val, condition)){
+    tab_for_each_row(sel_table, tab_chunk, sel_chblix, el_row, sel_schema) {
+        memcpy(el, (char *) el_row + select_field->offset, select_field->size);
+        if (comp_compare(db, type, el, comp_val, condition)) {
             memcpy(row, el_row, schema->slot_size);
             chblix_t rowix = tab_insert(table, schema, row);
-            if(chblix_cmp(&rowix, &CHBLIX_FAIL) == 0){
+            if (chblix_cmp(&rowix, &CHBLIX_FAIL) == 0) {
                 logger(LL_ERROR, __func__, "Failed to insert row");
                 return NULL;
             }
@@ -372,14 +376,234 @@ table_t* tab_select_op(db_t* db,
 }
 
 /**
+ * @brief       Filters rows from a table based on a condition
+ * @param[in]   db: pointer to the database
+ * @param[in]   sel_table: pointer to the table from which the selection is made
+ * @param[in]   sel_schema: pointer to the schema of the table from which the selection is made
+ * @param[in]   select_field: the field by which the selection is performed
+ * @param[in]   condition: comparison condition
+ * @param[in]   value: value to compare with
+ * @param[in]   type: the type of value to compare with
+ * @return      row_likedlist_t: a linked list of rows that satisfy the condition
+ */
+
+row_likedlist_t *tab_filter(db_t *db,
+                            table_t *sel_table,
+                            schema_t *sel_schema,
+                            field_t *select_field,
+                            condition_t condition,
+                            void *value,
+                            datatype_t type) {
+    row_likedlist_t *list = row_likedlist_init(sel_schema);
+    if (list == NULL) {
+        logger(LL_ERROR, __func__, "Failed to create new row_likedlist");
+        return NULL;
+    }
+
+    /* Check if datatype of field equals datatype of value */
+    if (type != select_field->type) {
+        return NULL;
+    }
+
+    void *el_row = malloc(sel_schema->slot_size);
+    void *el = malloc(select_field->size);
+    void *comp_val = malloc(select_field->size);
+    memcpy(comp_val, value, select_field->size);
+
+    /* Select */
+    tab_for_each_row(sel_table, tab_chunk, sel_chblix, el_row, sel_schema) {
+        memcpy(el, (char *) el_row + select_field->offset, select_field->size);
+        if (comp_compare(db, type, el, comp_val, condition)) {
+            row_likedlist_add(list, &sel_chblix, el_row, sel_schema, sel_table);
+        }
+    }
+    free(comp_val);
+    free(el_row);
+    free(el);
+    return list;
+}
+
+void rll_filter(db_t *db,
+                row_likedlist_t *rll,
+                field_t *select_field,
+                condition_t condition,
+                void *value,
+                datatype_t type) {
+    /* Check if datatype of field equals datatype of value */
+    if (type != select_field->type) {
+        return;
+    }
+
+    void *el_row = malloc(rll->schema->slot_size);
+    void *el = malloc(select_field->size);
+    void *comp_val = malloc(select_field->size);
+    memcpy(comp_val, value, select_field->size);
+
+    /* Select */
+    row_node_t *current = rll->head;
+    while (current != NULL) {
+        memcpy(el, (char *) current->row + select_field->offset, select_field->size);
+        if (comp_compare(db, type, el, comp_val, condition)) {
+            current = current->next;
+        } else {
+            row_node_t *next = current->next;
+            row_likedlist_remove(rll, current);
+            current = next;
+        }
+    }
+    free(comp_val);
+    free(el_row);
+    free(el);
+}
+
+row_likedlist_t *rll_join(db_t *db,
+                          row_likedlist_t *left,
+                          row_likedlist_t *right) {
+    /* Check if tables are NULL */
+    if (left == NULL) {
+        logger(LL_ERROR, __func__, "Invalid argument, left table is NULL");
+        return NULL;
+    }
+
+    /* Check if schemas are NULL */
+    if (right == NULL) {
+        logger(LL_ERROR, __func__, "Invalid argument, right table is NULL");
+        return NULL;
+    }
+    /* Create new schema */
+    schema_t *new_schema = sch_init();
+    if (new_schema == NULL) {
+        logger(LL_ERROR, __func__, "Failed to create new schema");
+        return NULL;
+    }
+    if (left->schema == NULL) {
+        logger(LL_ERROR, __func__, "Invalid argument, left schema is NULL");
+        return NULL;
+    }
+
+    if (right->schema == NULL) {
+        logger(LL_ERROR, __func__, "Invalid argument, right schema is NULL");
+        return NULL;
+    }
+    sch_for_each(left->schema, chunk, left_field_t, left_chblix, schema_index(left->schema)) {
+        if (sch_add_field(new_schema, left_field_t.name, left_field_t.type, (int64_t) left_field_t.size) ==
+            SCHEMA_FAIL) {
+            logger(LL_ERROR, __func__, "Failed to add field %s", left_field_t.name);
+            return NULL;
+        }
+    }
+    sch_for_each(right->schema, chunk2, right_field_t, right_chblix, schema_index(right->schema)) {
+        if (sch_add_field(new_schema, right_field_t.name, right_field_t.type, (int64_t) right_field_t.size) ==
+            SCHEMA_FAIL) {
+            logger(LL_ERROR, __func__, "Failed to add field %s", right_field_t.name);
+            return NULL;
+        }
+    }
+
+    row_likedlist_t *list = row_likedlist_init(new_schema);
+    if (list == NULL) {
+        logger(LL_ERROR, __func__, "Failed to create new row_likedlist");
+        return NULL;
+    }
+
+    /* Create new row */
+    void *row = malloc(new_schema->slot_size);
+
+    row_node_t *current_left = left->head;
+
+    /* Join */
+    while (current_left != NULL) {
+        row_node_t *current_right = right->head;
+        while (current_right != NULL) {
+            memcpy(row, current_left->row, left->schema->slot_size);
+            memcpy((char *) row + left->schema->slot_size, current_right->row, right->schema->slot_size);
+            row_likedlist_add(list, &current_left->rst_head->rowix, row, current_left->rst_head->schema,
+                              current_left->rst_head->table);
+            rst_node_t* current_rst_left = current_left->rst_head->next;
+            while (current_rst_left != NULL) {
+                row_likedlist_add_rst(&current_rst_left->rowix, current_left, current_rst_left->schema, current_rst_left->table);
+                current_rst_left = current_rst_left->next;
+            }
+            rst_node_t* current_rst_right = current_right->rst_head;
+            while (current_rst_right != NULL) {
+                row_likedlist_add_rst(&current_rst_right->rowix, current_right, current_rst_right->schema, current_rst_right->table);
+                current_rst_right = current_rst_right->next;
+            }
+            current_right = current_right->next;
+        }
+        current_left = current_left->next;
+    }
+    free(row);
+    return list;
+}
+
+/**
+ * @brief       Converts a linked list of rows into a table
+ * @param[in]   db: pointer to the database
+ * @param[in]   row_ll: pointer to the linked list of rows
+ * @param[in]   name: name of the new table
+ * @return      table_t*: pointer to the new table on success, NULL on failure
+ *
+ */
+
+table_t *tab_rll2table(db_t *db, row_likedlist_t *row_ll, const char *name) {
+    /* Create new schema */
+    schema_t *schema = sch_init();
+    if (schema == NULL) {
+        logger(LL_ERROR, __func__, "Failed to create new schema");
+        return NULL;
+    }
+    sch_for_each(row_ll->schema, chunk, field, chblix, schema_index(row_ll->schema)) {
+        if (sch_add_field(schema, field.name, field.type, (int64_t) field.size) == SCHEMA_FAIL) {
+            logger(LL_ERROR, __func__, "Failed to add field %s", field.name);
+            return NULL;
+        }
+    }
+
+    table_t *table = tab_init(db, name, schema);
+    if (table == NULL) {
+        logger(LL_ERROR, __func__, "Failed to create new table");
+        return NULL;
+    }
+
+    row_node_t *current = row_ll->head;
+    uint8_t *row_dest = malloc(row_ll->schema->slot_size);
+    while (current != NULL) {
+        chblix_t rowix = tab_insert(table, row_ll->schema, current->row);
+        if (chblix_cmp(&rowix, &CHBLIX_FAIL) == 0) {
+            logger(LL_ERROR, __func__, "Failed to insert row");
+            return NULL;
+        }
+        current = current->next;
+    }
+    free(row_dest);
+    return table;
+}
+
+row_likedlist_t *tab_table2rll(db_t *db, table_t *table) {
+    schema_t *schema = sch_load(table->schidx);
+    row_likedlist_t *list = row_likedlist_init(schema);
+    if (list == NULL) {
+        logger(LL_ERROR, __func__, "Failed to create new row_likedlist");
+        return NULL;
+    }
+    void *row = malloc(schema->slot_size);
+    tab_for_each_row(table, tab_chunk, chblix, row, schema) {
+        row_likedlist_add(list, &chblix, row, schema, table);
+    }
+    free(row);
+    return list;
+}
+
+/**
  * @brief       Drop a table
  * @param[in]   db: pointer to db
  * @param[in]   table: pointer of the table
  * @return      PPL_SUCCESS on success, PPL_FAIL on failure
  */
 
-int tab_drop(db_t* db, table_t* table){
-    if (mtab_delete(db->meta_table_idx,table_index(table)) == TABLE_FAIL) {
+int tab_drop(db_t *db, table_t *table) {
+    if (mtab_delete(db->meta_table_idx, table_index(table)) == TABLE_FAIL) {
         logger(LL_ERROR, __func__, "Failed to delete table %"PRId64, table_index(table));
         return PPL_FAIL;
     }
@@ -400,33 +624,33 @@ int tab_drop(db_t* db, table_t* table){
  * @return
  */
 
-int tab_update_row_op(db_t* db,
-                    table_t* table,
-                    schema_t* schema,
-                    field_t* field,
-                    condition_t condition,
-                    void* value,
-                    datatype_t type,
-                    void* row){
+int tab_update_row_op(db_t *db,
+                      table_t *table,
+                      schema_t *schema,
+                      field_t *field,
+                      condition_t condition,
+                      void *value,
+                      datatype_t type,
+                      void *row) {
 
-    void* el_row = malloc(schema->slot_size);
-    void* el = malloc(field->size);
-    void* comp_val = malloc(field->size);
+    void *el_row = malloc(schema->slot_size);
+    void *el = malloc(field->size);
+    void *comp_val = malloc(field->size);
     memcpy(comp_val, value, field->size);
     int64_t counter = 0;
 
     /* Update */
-    tab_for_each_row(table, upd_chunk,upd_chblix, el_row, schema){
+    tab_for_each_row(table, upd_chunk, upd_chblix, el_row, schema) {
         counter++;
-        memcpy(el, (char*)el_row + field->offset, field->size);
-        if(comp_compare(db, type, el, comp_val, condition)){
+        memcpy(el, (char *) el_row + field->offset, field->size);
+        if (comp_compare(db, type, el, comp_val, condition)) {
             memcpy(el_row, row, schema->slot_size);
-            if(tab_update_row(table,schema, &upd_chblix, el_row) == TABLE_FAIL){
+            if (tab_update_row(table, schema, &upd_chblix, el_row) == TABLE_FAIL) {
                 logger(LL_ERROR, __func__, "Failed to update row");
                 return TABLE_FAIL;
             }
         }
-        if(counter == 488){
+        if (counter == 488) {
             printf("stop");
         }
     }
@@ -451,59 +675,59 @@ int tab_update_row_op(db_t* db,
  * @return      TABLE_SUCCESS on success, TABLE_FAIL on failure
  */
 
-int tab_update_element_op(db_t* db,
-                            int64_t tablix,
-                            void* element,
-                            const char* field_name,
-                            const char* field_comp,
-                            condition_t condition,
-                            void* value,
-                            datatype_t type) {
+int tab_update_element_op(db_t *db,
+                          int64_t tablix,
+                          void *element,
+                          const char *field_name,
+                          const char *field_comp,
+                          condition_t condition,
+                          void *value,
+                          datatype_t type) {
     /* Load table */
-    table_t* upd_tab = tab_load(tablix);
-    if(upd_tab == NULL){
+    table_t *upd_tab = tab_load(tablix);
+    if (upd_tab == NULL) {
         logger(LL_ERROR, __func__, "Failed to load table %"PRId64, tablix);
         return TABLE_FAIL;
     }
 
     /* Load schema */
-    schema_t* upd_schema = sch_load(upd_tab->schidx);
-    if(upd_schema == NULL){
+    schema_t *upd_schema = sch_load(upd_tab->schidx);
+    if (upd_schema == NULL) {
         logger(LL_ERROR, __func__, "Failed to load schema %"PRId64, upd_tab->schidx);
         return TABLE_FAIL;
     }
 
     /* Load compare field */
     field_t comp_field;
-    if(sch_get_field(upd_schema, field_comp, &comp_field) == SCHEMA_FAIL){
+    if (sch_get_field(upd_schema, field_comp, &comp_field) == SCHEMA_FAIL) {
         logger(LL_ERROR, __func__, "Failed to get field %s", field_comp);
         return TABLE_FAIL;
     }
 
     /* Load update field */
     field_t upd_field;
-    if(sch_get_field(upd_schema, field_name, &upd_field) == SCHEMA_FAIL){
+    if (sch_get_field(upd_schema, field_name, &upd_field) == SCHEMA_FAIL) {
         logger(LL_ERROR, __func__, "Failed to get field %s", field_comp);
         return TABLE_FAIL;
     }
 
     /* Check if datatype of field equals datatype of value */
-    if(type != comp_field.type){
+    if (type != comp_field.type) {
         return TABLE_FAIL;
     }
 
-    void* el_row = malloc(upd_schema->slot_size);
-    void* el = malloc(comp_field.size);
-    void* upd_el = malloc(upd_field.size);
-    void* comp_val = malloc(comp_field.size);
+    void *el_row = malloc(upd_schema->slot_size);
+    void *el = malloc(comp_field.size);
+    void *upd_el = malloc(upd_field.size);
+    void *comp_val = malloc(comp_field.size);
     memcpy(comp_val, value, comp_field.size);
 
     /* Update */
-    tab_for_each_row(upd_tab, upd_chunk,upd_chblix, el_row, upd_schema){
-        memcpy(el, (char*)el_row + comp_field.offset, comp_field.size);
-        if(comp_compare(db, type, el, comp_val, condition)){
+    tab_for_each_row(upd_tab, upd_chunk, upd_chblix, el_row, upd_schema) {
+        memcpy(el, (char *) el_row + comp_field.offset, comp_field.size);
+        if (comp_compare(db, type, el, comp_val, condition)) {
             memcpy(upd_el, element, upd_field.size);
-            if(tab_update_element(upd_tab, &upd_chblix, &upd_field, upd_el) == TABLE_FAIL){
+            if (tab_update_element(upd_tab, &upd_chblix, &upd_field, upd_el) == TABLE_FAIL) {
                 logger(LL_ERROR, __func__, "Failed to update row");
                 return TABLE_FAIL;
             }
@@ -527,38 +751,38 @@ int tab_update_element_op(db_t* db,
  * @return      TABLE_SUCCESS on success, TABLE_FAIL on failure
  */
 
-int tab_delete_op(db_t* db,
-                   table_t* table,
-                   schema_t* schema,
-                   field_t* field_comp,
-                   condition_t condition,
-                   void* value){
+int tab_delete_op(db_t *db,
+                  table_t *table,
+                  schema_t *schema,
+                  field_t *field_comp,
+                  condition_t condition,
+                  void *value) {
 
-    void* el_row = malloc(schema->slot_size);
-    void* el = malloc(field_comp->size);
-    void* comp_val = malloc(field_comp->size);
+    void *el_row = malloc(schema->slot_size);
+    void *el = malloc(field_comp->size);
+    void *comp_val = malloc(field_comp->size);
     memcpy(comp_val, value, field_comp->size);
     int64_t counter = 0;
 
     /* Delete */
-    tab_for_each_row(table, del_chunk, del_chblix, el_row, schema){
+    tab_for_each_row(table, del_chunk, del_chblix, el_row, schema) {
         counter++;
-        memcpy(el, (char*)el_row + field_comp->offset, field_comp->size);
+        memcpy(el, (char *) el_row + field_comp->offset, field_comp->size);
 //        int64_t* id = el;
 //        printf("c: %lld | b: %lld | id: %lld\n", del_chblix.chunk_idx, del_chblix.block_idx, *id);
-        if(comp_compare(db, field_comp->type, el, comp_val, condition)){
+        if (comp_compare(db, field_comp->type, el, comp_val, condition)) {
             chblix_t temp = del_chblix;
             bool flag = false;
-            if(del_chunk->num_of_free_blocks + 1 == del_chunk->capacity){
+            if (del_chunk->num_of_free_blocks + 1 == del_chunk->capacity) {
                 int64_t next_chunk = del_chunk->next_page;
-                temp = (chblix_t){.block_idx = -1, .chunk_idx=next_chunk};
+                temp = (chblix_t) {.block_idx = -1, .chunk_idx=next_chunk};
                 flag = true;
             }
-            if(tab_delete_nova(table, del_chunk, &del_chblix) == TABLE_FAIL){
+            if (tab_delete_nova(table, del_chunk, &del_chblix) == TABLE_FAIL) {
                 logger(LL_ERROR, __func__, "Failed to delete row");
                 return TABLE_FAIL;
             }
-            if(flag){
+            if (flag) {
                 del_chblix = temp;
                 del_chunk = ppl_load_chunk(del_chblix.chunk_idx);
             }
@@ -587,44 +811,44 @@ int tab_delete_op(db_t* db,
  *  @return      pointer to new table on success, NULL on failure
  */
 
-table_t* tab_projection(db_t* db,
-                   table_t* table,
-                   schema_t* schema,
-                   field_t* fields,
-                   int64_t num_of_fields,
-                   const char* name){
+table_t *tab_projection(db_t *db,
+                        table_t *table,
+                        schema_t *schema,
+                        field_t *fields,
+                        int64_t num_of_fields,
+                        const char *name) {
 
     /* Create new schema */
-    schema_t* new_schema = sch_init();
-    if(new_schema == NULL){
+    schema_t *new_schema = sch_init();
+    if (new_schema == NULL) {
         logger(LL_ERROR, __func__, "Failed to create new schema");
         return NULL;
     }
-    for(int64_t i = 0; i < num_of_fields; ++i){
-        if(sch_add_field(new_schema, fields[i].name, fields[i].type, (int64_t)fields[i].size) == SCHEMA_FAIL){
+    for (int64_t i = 0; i < num_of_fields; ++i) {
+        if (sch_add_field(new_schema, fields[i].name, fields[i].type, (int64_t) fields[i].size) == SCHEMA_FAIL) {
             logger(LL_ERROR, __func__, "Failed to add field %s", fields[i].name);
             return NULL;
         }
     }
 
     /* Create new table */
-    table_t* new_table = tab_init(db, name, new_schema);
-    if(new_table == NULL){
+    table_t *new_table = tab_init(db, name, new_schema);
+    if (new_table == NULL) {
         logger(LL_ERROR, __func__, "Failed to create new table");
         return NULL;
     }
 
     /* Create new row */
-    void* row = malloc(new_schema->slot_size);
+    void *row = malloc(new_schema->slot_size);
 
     /* Projection */
 
-    tab_for_each_row(table, chunk, chblix, row, schema){
-        for(int64_t i = 0; i < num_of_fields; ++i){
-            memcpy((char*)row + fields[i].offset, (char*)row + fields[i].offset, fields[i].size);
+    tab_for_each_row(table, chunk, chblix, row, schema) {
+        for (int64_t i = 0; i < num_of_fields; ++i) {
+            memcpy((char *) row + fields[i].offset, (char *) row + fields[i].offset, fields[i].size);
         }
         chblix_t rowix = tab_insert(new_table, new_schema, row);
-        if(chblix_cmp(&rowix, &CHBLIX_FAIL) == 0){
+        if (chblix_cmp(&rowix, &CHBLIX_FAIL) == 0) {
             logger(LL_ERROR, __func__, "Failed to insert row");
             return NULL;
         }
@@ -632,4 +856,6 @@ table_t* tab_projection(db_t* db,
     free(row);
     return new_table;
 }
+
+
 

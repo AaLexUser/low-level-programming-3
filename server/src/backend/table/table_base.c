@@ -113,6 +113,15 @@ int tab_delete_nova(table_t* table, chunk_t* chunk, chblix_t* rowix){
     return TABLE_SUCCESS;
 }
 
+int tab_delete_row(table_t* table, chblix_t* rowix){
+    chunk_t* chunk = ppl_load_chunk(rowix->chunk_idx);
+    if(tab_delete_nova(table, chunk, rowix) == TABLE_FAIL){
+        logger(LL_ERROR, __func__, "Failed to delete row");
+        return TABLE_FAIL;
+    }
+    return TABLE_SUCCESS;
+}
+
 /**
  * @brief       Update a row
  * @param[in]   table: pointer to table

@@ -1,5 +1,6 @@
 #pragma once
 #include "backend/comparator/comparator.h"
+#include "backend/utils/row_likedlist.h"
 #include "backend/db/db.h"
 #include "backend/journal/metatab.h"
 #include "table_base.h"
@@ -69,3 +70,27 @@ table_t* tab_join(db_t* db,
                   table_t* right,
                   schema_t* right_schema,
                   const char* name);
+
+
+row_likedlist_t *tab_filter(db_t *db,
+                            table_t *sel_table,
+                            schema_t *sel_schema,
+                            field_t *select_field,
+                            condition_t condition,
+                            void *value,
+                            datatype_t type);
+void rll_filter(db_t *db,
+                row_likedlist_t *rll,
+                field_t *select_field,
+                condition_t condition,
+                void *value,
+                datatype_t type);
+
+
+row_likedlist_t* rll_join(db_t *db,
+                          row_likedlist_t *left,
+                          row_likedlist_t *right);
+
+row_likedlist_t* tab_table2rll(db_t *db, table_t *table);
+table_t *tab_rll2table(db_t *db, row_likedlist_t *row_ll, const char *name);
+

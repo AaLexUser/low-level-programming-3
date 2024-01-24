@@ -11,7 +11,7 @@ enum CH_Status {CH_SUCCESS = 0, CH_FAIL = -1, CH_DELETED = -2};
 #define MB (1024u * KB)
 #define GB (1024u * MB)
 
-#define CH_MAX_MEMORY_USAGE  (50*PAGE_SIZE)
+#define CH_MAX_MEMORY_USAGE  (1u*GB)
 
 typedef struct caching{
     file_t file;
