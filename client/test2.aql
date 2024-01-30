@@ -11,7 +11,7 @@ INSERT { name: "Alex", lastname: "Lapin", student: true, money: 100, score: 5.0 
 
 FOR u IN users FILTER u.score < 5.0 REMOVE u IN users
 
-FOR u IN users FILTER u.score < 2 AND u.name == "Alex" UPDATE u WITH { score: 5 } IN users
+FOR u IN users FILTER u.score < 2 || u.name == "Alex" UPDATE u WITH { score: 5 } IN users
 
 FOR u IN users FILTER u.score > 4 || u.name == "Alex" FOR s IN students FILTER u.name == s.name && "Alex" IN u.name RETURN MERGE(u,s)
 
@@ -39,3 +39,5 @@ FOR u IN users FILTER u.money == 100 FOR g IN group FILTER g.group_id == 3 RETUR
 FOR g IN group FILTER g.group_id == 3 RETURN g
 
 DROP players
+
+FOR u IN users FILTER u.name == "Alex" UPDATE u WITH { score: 5 } IN users

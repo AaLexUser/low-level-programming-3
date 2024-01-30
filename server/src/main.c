@@ -4,7 +4,7 @@
 #include "backend/connection/xml.h"
 #include "backend/connection/network.h"
 #include "backend/db/db.h"
-#include "backend/connection/reqexe.h"
+#include "backend/connection/query_execute/reqexe.h"
 #include "backend/table/table.h"
 #include <signal.h>
 
@@ -95,6 +95,8 @@ int main(int argc, char **argv) {
     logger(LL_INFO, __func__, "Listening on port %d", port);
 
     signal(SIGTERM, sigint_handler);
+    signal(SIGINT, sigint_handler);
+    signal(SIGKILL, sigint_handler);
 
     FD_ZERO(&readfds);
     FD_SET(sock, &readfds);

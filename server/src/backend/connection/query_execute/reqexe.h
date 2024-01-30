@@ -1,14 +1,9 @@
 #ifndef REQEXE_H
 #define REQEXE_H
 
-#include "ast.h"
+#include "backend/connection/ast.h"
 #include "backend/db/db.h"
-
-struct response {
-    int status;
-    char* message;
-    table_t* table;
-};
+#include "backend/connection/query_execute/exe_utils.h"
 
 int reqexe(db_t *db, struct ast *root, struct response* resp);
 

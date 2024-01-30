@@ -71,12 +71,12 @@ query: terminal YYEOF                            { $$ = $1;}
     | for_first_stmt YYEOF                       { $$ = $1;}
     ;
 
-for_first_stmt: FOR VARNAME IN VARNAME terminal             { $$ = newfor($2, $4, NULL, $5); *root= $$;}
-    | FOR VARNAME IN VARNAME non_terminal_list terminal     { $$ = newfor($2, $4, $5, $6); *root= $$;}
+for_first_stmt: FOR VARNAME IN VARNAME terminal             { $$ = newfor($2, $4, NULL, $5); *root= $$;printf("terminal");}
+    | FOR VARNAME IN VARNAME non_terminal_list terminal     { $$ = newfor($2, $4, $5, $6); *root= $$;printf("non term + terminal");}
     ;
 
 for_stmt: FOR VARNAME IN VARNAME                                { $$ = newfor($2, $4, NULL, NULL); *root= $$;}
-    | FOR VARNAME IN VARNAME non_terminal_list                  { $$ = newfor($2, $4, $5, NULL); *root= $$;}
+    | FOR VARNAME IN VARNAME non_terminal_list                  { $$ = newfor($2, $4, $5, NULL); *root= $$; printf("Non terminal");}
     ;
 
 non_terminal_list: for_stmt                                  { $$ = newlist($1, NULL); *root= $$;}

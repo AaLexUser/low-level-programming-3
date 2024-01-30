@@ -77,6 +77,7 @@ int tab_select_row(int64_t tablix, chblix_t* rowix, void* dest);
 int tab_delete_nova(table_t* table, chunk_t* chunk, chblix_t* rowix);
 int tab_delete(int64_t tablix, chblix_t* rowix);
 int tab_update_row(table_t* table, schema_t* schema, chblix_t* rowix, void* row);
+int tab_update_field(table_t* table, schema_t* schema, chblix_t* rowix, field_t* field, void* element);
 int tab_delete_row(table_t* table, chblix_t* rowix);
 int tab_update_element(table_t* table, chblix_t* rowix, field_t* field, void* element);
 int tab_get_element(int64_t tablix, chblix_t* rowix, field_t* field, void* element);

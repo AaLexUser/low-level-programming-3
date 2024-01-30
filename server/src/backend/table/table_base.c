@@ -2,6 +2,20 @@
 #include "utils/logger.h"
 #include <stdio.h>
 
+int validate_table_and_schema(table_t* table, schema_t* schema){
+    if(table == NULL){
+        logger(LL_ERROR, __func__, "Invalid argument: table is NULL");
+        return TABLE_FAIL;
+    }
+
+    if(schema == NULL){
+        logger(LL_ERROR, __func__, "Invalid argument: schema is NULL");
+        return TABLE_FAIL;
+    }
+
+    return TABLE_SUCCESS;
+}
+
 /**
  * @brief       Initialize a table
  * @param[in]   name: name of the table
@@ -132,17 +146,35 @@ int tab_delete_row(table_t* table, chblix_t* rowix){
  */
 
 int tab_update_row(table_t* table, schema_t* schema, chblix_t* rowix, void* row){
-    if(table == NULL){
-        logger(LL_ERROR, __func__, "Invalid argument: table is NULL");
+    if(validate_table_and_schema(table, schema) == TABLE_FAIL) {
         return TABLE_FAIL;
     }
-
-    if(schema == NULL){
-        logger(LL_ERROR, __func__, "Invalid argument: schema is NULL");
-        return TABLE_FAIL;
-    }
-
     if(lb_write(&table->ppl_header, rowix, row, schema->slot_size, 0) == LB_FAIL){
+        logger(LL_ERROR, __func__, "Failed to write row");
+        return TABLE_FAIL;
+    }
+    return TABLE_SUCCESS;
+}
+
+/**
+ * @brief       This function updates a specific field in a row of a table.
+ * @param[in]   table: A pointer to the table where the row is located.
+ * @param[in]   schema: A pointer to the schema of the table.
+ * @param[in]   rowix: The index of the row in the table where the field is located.
+ * @param[in]   field: A pointer to the field that needs to be updated.
+ * @param[in]   element: A pointer to the new data that will replace the current data in the field.
+ * @return      Returns TABLE_SUCCESS on successful update, TABLE_FAIL on failure.
+ *
+ * This function first checks if the table and schema pointers are not NULL. If either is NULL, it logs an error message and returns TABLE_FAIL.
+ * Then, it calls the lb_write function to write the new data to the specified field in the row. If lb_write returns LB_FAIL, it logs an error message and returns TABLE_FAIL.
+ * If all operations are successful, it returns TABLE_SUCCESS.
+ */
+int tab_update_field(table_t* table, schema_t* schema, chblix_t* rowix, field_t* field, void* element){
+    if(validate_table_and_schema(table, schema) == TABLE_FAIL) {
+        return TABLE_FAIL;
+    }
+
+    if(lb_write(&table->ppl_header, rowix, element, (int64_t) field->size, (int64_t) field->offset) == LB_FAIL){
         logger(LL_ERROR, __func__, "Failed to write row");
         return TABLE_FAIL;
     }

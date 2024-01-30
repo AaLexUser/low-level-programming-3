@@ -21,7 +21,7 @@
                             <xs:element name="rows" minOccurs="0">
                                 <xs:complexType>
                                     <xs:sequence>
-                                        <xs:element name="row" maxOccurs="unbounded">
+                                        <xs:element name="row" maxOccurs="unbounded" minOccurs="0">
                                             <xs:complexType>
                                                 <xs:sequence>
                                                     <xs:element name="element" maxOccurs="unbounded">
