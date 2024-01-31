@@ -1,11 +1,12 @@
 #include "reqexe.h"
 #include "utils/utils.h"
-#include "exe_utils.h"
+#include "backend/connection/query_execute/utils/exe_utils.h"
 #include "backend/connection/query_execute/queries/queries_include.h"
 
 int reqexe(db_t *db, struct ast *root, struct response *resp) {
     if (!root) {
-        return log_error_and_update_response(resp, "Root is NULL");
+        LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Root is NULL");
+        return -1;
     }
     default_query_args_t args = {.db = db, .root = root, .resp = resp};
     switch (root->nodetype) {
@@ -26,7 +27,8 @@ int reqexe(db_t *db, struct ast *root, struct response *resp) {
             break;
         }
         default: {
-            return log_error_and_update_response(resp, "Invalid root type %d", root->nodetype);
+            LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Invalid root type %d", root->nodetype);
+            return -1;
         }
     }
     return 0;

@@ -2,7 +2,7 @@
 #define QUERIES_INCLUDE_H
 
 #include "backend/db/db.h"
-#include "../exe_utils.h"
+#include "backend/connection/query_execute/utils/exe_utils.h"
 
 typedef struct default_query_args {
     db_t *db;

@@ -1,4 +1,5 @@
 #include "subqueries_include.h"
+#include "backend/connection/query_execute/utils/constant_value.h"
 
 static void simple_condition(db_t *db,
                       struct filter_condition_ast *root,
@@ -10,39 +11,22 @@ static void simple_condition(db_t *db,
     field_t sel_field;
 
     if (sch_get_field(schema, attr_ptr->attr_name, &sel_field) == SCHEMA_NOT_FOUND) {
-        logger(LL_ERROR, __func__, "Field not found %s", attr_ptr->attr_name);
+        LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Field not found %s", attr_ptr->attr_name);
         return;
     }
 
     condition_t condition = get_condition_type(filter_expr_ptr->cmp);
-    struct constant_val *constant_val = get_constant(filter_expr_ptr->constant);
+    struct constant_val *constant_val = init_constant(db, filter_expr_ptr->constant);
 
-    if (constant_val == NULL) {
+    if (constant_val == NULL){
         logger(LL_ERROR, __func__, "Failed to get constant");
         return;
     }
 
     void *value_ptr;
-    switch (constant_val->type) {
-        case DT_INT:
-            value_ptr = &constant_val->int_val;
-            break;
-        case DT_FLOAT:
-            value_ptr = &constant_val->float_val;
-            break;
-        case DT_BOOL:
-            value_ptr = &constant_val->bool_val;
-            break;
-        case DT_VARCHAR:
-            value_ptr = &constant_val->string_val;
-            break;
-        default:
-            log_error_and_update_response(resp, "Invalid type %d", constant_val->type);
-            free(constant_val);
-            return;
-    }
+    value_ptr = GET_VALUE_PTR(constant_val, constant_val->type);
     if (sel_field.type != constant_val->type) {
-        log_error_and_update_response(resp, "Invalid field type %d", constant_val->type);
+        LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Invalid field type %d", constant_val->type);
         free(constant_val);
         return;
     }

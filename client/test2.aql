@@ -1,5 +1,9 @@
 FOR u IN users RETURN u
 
+FOR u IN users FILTER u.name == "Berman" UPDATE u WITH { score: 5.0 } IN users
+
+FOR u IN users FILTER u.name == "Berman" RETURN u
+
 CREATE users WITH { name: string, lastname: string, student: bool, money: int, score: float}
 CREATE group WITH { group_id: int, name: string }
 

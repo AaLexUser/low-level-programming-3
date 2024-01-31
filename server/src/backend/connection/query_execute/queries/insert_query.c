@@ -4,17 +4,20 @@ int insert_exec(default_query_args_t* args){
     struct insert_ast *insert_ast_ptr = (struct insert_ast *) args->root;
     int64_t tabix = mtab_find_table_by_name(args->db->meta_table_idx, insert_ast_ptr->tabname);
     if (tabix == TABLE_FAIL) {
-        return log_error_and_update_response(args->resp, "Failed to find table %s", insert_ast_ptr->tabname);
+        LOG_ERROR_AND_UPDATE_RESPONSE(args->resp, "Failed to find table %s", insert_ast_ptr->tabname);
+        return -1;
     }
     table_t *table = tab_load(tabix);
     if (table == NULL) {
-        return log_error_and_update_response(args->resp, "Failed to load table %s", insert_ast_ptr->tabname);
+        LOG_ERROR_AND_UPDATE_RESPONSE(args->resp, "Failed to load table %s", insert_ast_ptr->tabname);
+        return -1;
     }
     struct ast *temp = insert_ast_ptr->list;
     schema_t *schema = sch_load(table->schidx);
     uint8_t *row = malloc(schema->slot_size);
     if (row == NULL) {
-        return log_error_and_update_response(args->resp, "Failed to allocate memory");
+        LOG_ERROR_AND_UPDATE_RESPONSE(args->resp, "Failed to allocate memory");
+        return -1;
     }
     memset(row, 0, schema->slot_size);
     struct list_ast *head = (struct list_ast *) temp;
@@ -31,7 +34,8 @@ int insert_exec(default_query_args_t* args){
         switch (fieldi.type) {
             case DT_INT: {
                 if (pair_ast->value->nodetype != NT_INTVAL) {
-                    return log_error_and_update_response(args->resp, "Invalid type %d", pair_ast->value->nodetype);
+                    LOG_ERROR_AND_UPDATE_RESPONSE(args->resp, "Invalid type %d", pair_ast->value->nodetype);
+                    return -1;
                 }
                 struct nint *integer_val = (struct nint *) pair_ast->value;
                 int64_t int_val = (int64_t) integer_val->value;
@@ -40,7 +44,8 @@ int insert_exec(default_query_args_t* args){
             }
             case DT_FLOAT: {
                 if (pair_ast->value->nodetype != NT_FLOATVAL) {
-                    return log_error_and_update_response(args->resp, "Invalid type %d", pair_ast->value->nodetype);
+                    LOG_ERROR_AND_UPDATE_RESPONSE(args->resp, "Invalid type %d", pair_ast->value->nodetype);
+                    return -1;
                 }
                 struct nfloat *float_val = (struct nfloat *) pair_ast->value;
                 double double_val = (double) float_val->value;
@@ -49,7 +54,8 @@ int insert_exec(default_query_args_t* args){
             }
             case DT_BOOL: {
                 if (pair_ast->value->nodetype != NT_BOOLVAL) {
-                    return log_error_and_update_response(args->resp, "Invalid type %d", pair_ast->value->nodetype);
+                    LOG_ERROR_AND_UPDATE_RESPONSE(args->resp, "Invalid type %d", pair_ast->value->nodetype);
+                    return -1;
                 }
                 struct nint *bool_val = (struct nint *) pair_ast->value;
                 bool boolval = (bool) bool_val->value;
@@ -58,7 +64,8 @@ int insert_exec(default_query_args_t* args){
             }
             case DT_VARCHAR: {
                 if (pair_ast->value->nodetype != NT_STRINGVAL) {
-                    return log_error_and_update_response(args->resp, "Invalid type %d", pair_ast->value->nodetype);
+                    LOG_ERROR_AND_UPDATE_RESPONSE(args->resp, "Invalid type %d", pair_ast->value->nodetype);
+                    return -1;
                 }
                 struct nstring *string_val = (struct nstring *) pair_ast->value;
                 vch_ticket_t ticket = vch_add(args->db->varchar_mgr_idx, string_val->value);
@@ -66,7 +73,8 @@ int insert_exec(default_query_args_t* args){
                 break;
             }
             default: {
-                return log_error_and_update_response(args->resp, "Invalid type %d", fieldi.type);
+                LOG_ERROR_AND_UPDATE_RESPONSE(args->resp, "Invalid type %d", fieldi.type);
+                return -1;
             }
 
         }
