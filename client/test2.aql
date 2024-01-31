@@ -1,4 +1,5 @@
 FOR u IN users RETURN u
+FOR g IN group RETURN g
 
 FOR u IN users FILTER u.name == "Berman" UPDATE u WITH { score: 5.0 } IN users
 

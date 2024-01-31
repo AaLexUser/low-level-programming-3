@@ -47,6 +47,8 @@ static const datatype_t datatype_lookup[] = {
     resp->message = str; \
 } while(0)
 
+struct response* create_response();
+
 void reverseList(struct list_ast **head_ref);
 
 condition_t get_condition_type(int comparison_type);

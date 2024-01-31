@@ -33,6 +33,7 @@ typedef struct row_likedlist_iterator {
 } row_likedlist_iterator_t;
 
 row_likedlist_t *row_likedlist_init(schema_t *schema);
+row_node_t* init_row_node();
 void row_likedlist_free(row_likedlist_t *list);
 int row_likedlist_add(row_likedlist_t *list,
                       chblix_t* rowix,

@@ -13,6 +13,21 @@ row_likedlist_t *row_likedlist_init(schema_t *schema)
     return list;
 }
 
+row_node_t* init_row_node(){
+    row_node_t* node = malloc(sizeof(row_node_t));
+    if (node == NULL) {
+        logger(LL_ERROR, __func__, "Failed to allocate memory for row_node_t");
+        return NULL;
+    }
+    node->row = NULL;
+    node->rst_head = NULL;
+    node->rst_tail = NULL;
+    node->next = NULL;
+    node->prev = NULL;
+    node->rst_size = 0;
+    return node;
+}
+
 static void free_node(row_node_t* node){
     rst_node_t *current = node->rst_head;
     while (current != NULL)
@@ -77,7 +92,7 @@ int row_likedlist_add(row_likedlist_t *list,
     }
 
 
-    row_node_t *node = malloc(sizeof(row_node_t));
+    row_node_t *node = init_row_node();
     row_likedlist_add_rst(rowix, node, origin_schema, origin_table);
     node->row = malloc(list->schema->slot_size);
     memcpy(node->row, row, list->schema->slot_size);

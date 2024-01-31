@@ -3,6 +3,18 @@
 #include "exe_utils.h"
 #include "utils/utils.h"
 
+struct response* create_response() {
+    struct response* resp = malloc(sizeof(struct response));
+    if (resp == NULL) {
+        logger(LL_ERROR, __func__, "Failed to allocate memory for response");
+        return NULL;
+    }
+    resp->status = 0;
+    resp->message = NULL;
+    resp->table = NULL;
+    return resp;
+}
+
 char* format_string(const char *message, ...)  {
     va_list args;
     va_start(args, message);

@@ -31,7 +31,7 @@ void client_handler(struct handler_args *args) {
     bool receiving_data = true;
 
     while (receiving_data) {
-        struct response *resp = malloc(sizeof(struct response));
+        struct response *resp = create_response();
         char *message;
         if (read_socket(args->client, &message) < 0) {
             receiving_data = false;
@@ -41,7 +41,7 @@ void client_handler(struct handler_args *args) {
             receiving_data = false;
             continue;
         }
-        printf("Received: %s\n", message);
+//        printf("Received: %s\n", message);
         if(!validate_request(message)){
             printf("Invalid request\n");
             resp->message = strdup("Invalid request");
@@ -49,7 +49,7 @@ void client_handler(struct handler_args *args) {
         }
         else {
             struct ast *root = parse_xml_to_ast(message);
-            print_ast(stdout, root, 0);
+//            print_ast(stdout, root, 0);
             reqexe(args->db, root, resp);
             free_ast(root);
         }
@@ -63,6 +63,7 @@ void client_handler(struct handler_args *args) {
             tab_drop(args->db, resp->table);
         }
         free(message);
+        free(resp);
         xmlFree(response_xml);
     }
     FD_CLR(args->client, &readfds);
