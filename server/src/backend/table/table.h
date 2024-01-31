@@ -79,17 +79,22 @@ row_likedlist_t *tab_filter(db_t *db,
                             condition_t condition,
                             void *value,
                             datatype_t type);
-void rll_filter(db_t *db,
-                row_likedlist_t *rll,
-                field_t *select_field,
-                condition_t condition,
-                void *value,
-                datatype_t type);
+row_likedlist_t *rll_filter(db_t *db,
+                            row_likedlist_t *rll,
+                            field_t *select_field,
+                            condition_t condition,
+                            void *value,
+                            datatype_t type);
 
 
 row_likedlist_t* rll_join(db_t *db,
                           row_likedlist_t *left,
                           row_likedlist_t *right);
+
+row_likedlist_t *rll_join_or(row_likedlist_t *left,
+                             row_likedlist_t *right);
+row_likedlist_t *rll_join_and(row_likedlist_t *left,
+                              row_likedlist_t *right);
 
 row_likedlist_t* tab_table2rll(db_t *db, table_t *table);
 table_t *tab_rll2table(db_t *db, row_likedlist_t *row_ll, const char *name);

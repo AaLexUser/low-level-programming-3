@@ -40,7 +40,9 @@
         <xs:complexType>
             <xs:sequence>
                 <xs:element ref="filter_expr"/>
+                <xs:element ref="conditions" minOccurs="0" maxOccurs="unbounded"/>
             </xs:sequence>
+            <xs:attribute name="logic" type="xs:string" use="optional"/>
         </xs:complexType>
     </xs:element>
 

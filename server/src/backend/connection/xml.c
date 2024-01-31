@@ -128,15 +128,16 @@ struct ast *xml2ast(xmlNode *node) {
         xmlNodePtr child_node = get_child(node);
         struct ast *ast_nonterm_list_head = NULL;
         struct ast *terminal = NULL;
-
-        if (xmlStrcmp(child_node->name, BAD_CAST "list") == 0) {
-            ast_nonterm_list_head = xml2ast(child_node);
-            xmlNodePtr termtemp = get_next(get_child(node));
-            if (termtemp != NULL) {
-                terminal = xml2ast(termtemp);
+        if (child_node) {
+            if (xmlStrcmp(child_node->name, BAD_CAST "list") == 0) {
+                ast_nonterm_list_head = xml2ast(child_node);
+                xmlNodePtr termtemp = get_next(get_child(node));
+                if (termtemp != NULL) {
+                    terminal = xml2ast(termtemp);
+                }
+            } else {
+                terminal = xml2ast(child_node);
             }
-        } else {
-            terminal = xml2ast(child_node);
         }
 
         ast_node = newfor(var, tabname, ast_nonterm_list_head, terminal);

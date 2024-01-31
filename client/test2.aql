@@ -22,6 +22,8 @@ FOR u IN users FILTER u.score > 4 || u.name == "Alex" FOR s IN students FILTER u
 FOR u IN users FILTER u.money == 100 RETURN u
 FOR u IN users FILTER u.score < 5.0 RETURN u
 
+FOR u IN users FILTER u.money == 100 && u.student == true RETURN u
+
 INSERT { group_id: 1, name: "P33102" } INTO group
 INSERT { group_id: 2, name: "M33103" } INTO group
 INSERT { group_id: 3, name: "G33104" } INTO group
@@ -35,7 +37,7 @@ INSERT { name: "Dima", lastname: "Koval", student: true, money: 2330, score: 2.1
 INSERT { name: "Egor", lastname: "Flagman", student: true, money: 100, score: 1.2 } INTO users
 INSERT { name: "Fedor", lastname: "Champion", student: false, money: 0, score: 5.0 } INTO users
 
-
+FOR u IN users FILTER u.money == 100 FOR g IN group RETURN MERGE(u,g)
 FOR u IN users FILTER u.money == 100 FOR g IN group RETURN MERGE(u,g)
 FOR u IN users FILTER u.money == 100 FOR g IN group RETURN g
 

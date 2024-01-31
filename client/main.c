@@ -56,7 +56,6 @@ int main(int argc, char **argv)
         struct ast *ast = parse_query(buffer);
 
         char *xml = ast2xml(ast);
-        printf("Sending:\n %s\n", xml);
 
         if (send_message(sock, xml) < 0)
         {

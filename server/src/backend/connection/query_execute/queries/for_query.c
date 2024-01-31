@@ -99,12 +99,16 @@ static int process_terminal(db_t *db, schema_t *schema, struct ast *root, struct
                     break;
                 }
                 case NT_MERGE: {
-                    if (filtered_list->schema == NULL || second_rll->schema == NULL)
-                        rll_join(db, filtered_list, second_rll);
-                    table_t *restab = tab_rll2table(db, filtered_list, "TEMP");
-                    tab_print(db, restab, filtered_list->schema);
-                    set_response(resp, 0, "Selected successfully");
-                    resp->table = restab;
+                    if (filtered_list->schema != NULL && second_rll->schema != NULL) {
+                        row_likedlist_t* join_list = rll_join(db, filtered_list, second_rll);
+                        table_t *join_table = tab_rll2table(db, join_list, "TEMP");
+                        tab_print(db, join_table, join_list->schema);
+                        set_response(resp, 0, "Selected successfully");
+                        resp->table = join_table;
+                        row_likedlist_free(join_list);
+                        break;
+                    }
+                    LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Failed to join");
                     break;
                 }
             }
