@@ -18,6 +18,8 @@ file(GLOB_RECURSE test_sources CONFIGURE_DEPENDS
         tests/linked_block.c
         tests/schema.c
         tests/table.c
+        tests/hashtable.c
+        tests/test_hashtable.c
 )
 
 foreach(test_source IN LISTS test_sources)

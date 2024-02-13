@@ -12,26 +12,26 @@ static void insert_data(table_t* table, schema_t* schema, int64_t count){
             char NAME[10];
             char SURNAME[10];
             int64_t CREDIT;
-            float DEBIT;
+            double DEBIT;
             bool STUDENT;
     );
     for(int i = 0; i < count; i++){
         strncpy(row.NAME, "Alex", 10);
         strncpy(row.SURNAME, "Smith", 10);
         row.CREDIT = 10;
-        row.DEBIT = 10.5f;
+        row.DEBIT = 10.5;
         row.STUDENT = true;
         chblix_t res = tab_insert(table, schema, &row);
         strncpy(row.NAME, "Nick", 10);
         strncpy(row.SURNAME, "Johnson", 10);
         row.CREDIT = 20;
-        row.DEBIT = 20.5f;
+        row.DEBIT = 20.5;
         row.STUDENT = false;
         res = tab_insert(table, schema, &row);
         strncpy(row.NAME, "John", 10);
         strncpy(row.SURNAME, "Doe", 10);
         row.CREDIT = 30;
-        row.DEBIT = 30.5f;
+        row.DEBIT = 30.5;
         row.STUDENT = true;
         res = tab_insert(table, schema, &row);
     }
@@ -72,30 +72,30 @@ table_t* table_student(db_t* db, int count){
     tab_row(
             int64_t ID;
             char NAME[10];
-            float SCORE;
+            double SCORE;
             bool PASS;
     );
     row.ID = 1;
     strncpy(row.NAME,"John", 10);
-    row.SCORE = 10.5f;
+    row.SCORE = 10.5;
     row.PASS = true;
     chblix_t res = tab_insert(table, schema, &row);
 
     row.ID = 2;
     strncpy(row.NAME,"Nick", 10);
-    row.SCORE = 20.5f;
+    row.SCORE = 20.5;
     row.PASS = false;
     res = tab_insert(table, schema, &row);
 
     row.ID = 3;
     strncpy(row.NAME,"Alex", 10);
-    row.SCORE = 30.5f;
+    row.SCORE = 30.5;
     row.PASS = true;
     res = tab_insert(table,schema,  &row);
 
     row.ID = 4;
     strncpy(row.NAME,"Smith", 10);
-    row.SCORE = 40.5f;
+    row.SCORE = 40.5;
     row.PASS = false;
     res = tab_insert(table,schema,  &row);
 
@@ -274,7 +274,7 @@ DEFINE_TEST(select){
     db_t* db = db_init("test.db");
     table_t* table = table_student(db, 1);
     schema_t *schema = sch_load(table->schidx);
-    float value = 20.0f;
+    double value = 20.0;
     field_t sel_field;
     assert(sch_get_field(schema, "SCORE", &sel_field) == SCHEMA_SUCCESS);
     table_t* sel_table_t = tab_select_op(db, table, schema, &sel_field, "SELECT",  COND_GT, &value, DT_FLOAT);
@@ -282,7 +282,7 @@ DEFINE_TEST(select){
     schema_t* sel_schema = sch_load(sel_table_t->schidx);
     field_t* field = malloc(sizeof(field_t));
     assert(sch_get_field(sel_schema,  "SCORE", field) == SCHEMA_SUCCESS);
-    float element;
+    double element;
     tab_for_each_element(sel_table_t,chunk, chblix, &element, field){
         assert(element > value);
     }
@@ -311,7 +311,7 @@ DEFINE_TEST(select){
     }
     tab_drop(db, sel_table_t);
 
-    value = 10.5f;
+    value = 10.5;
     sel_table_t = tab_select_op(db,table, schema, &sel_field, "SELECT", COND_NEQ, &value, DT_FLOAT);
     sel_schema = sch_load(sel_table_t->schidx);
     assert(sch_get_field(sel_schema,  "SCORE", field) == SCHEMA_SUCCESS);
@@ -329,17 +329,17 @@ DEFINE_TEST(update_row_op){
     db_t* db = db_init("test.db");
     assert(db != NULL);
     table_t* table = table_student(db, 1);
-    float value = 20.5f;
+    double value = 20.5;
     schema_t* schema = sch_load(table->schidx);
     tab_row(
             int64_t ID;
             char NAME[10];
-            float SCORE;
+            double SCORE;
             bool PASS;
             );
     row.ID = 10;
     strncpy(row.NAME,"Nick", 10);
-    row.SCORE = 10.5f;
+    row.SCORE = 10.5;
     row.PASS = true;
     field_t field;
     sch_get_field(schema, "SCORE", &field);
@@ -348,7 +348,7 @@ DEFINE_TEST(update_row_op){
     bool flag = false;
     tab_for_each_row(table, chunk, chblix, &row, schema){
         if(row.ID == 10){
-            assert(row.SCORE == 10.5f);
+            assert(row.SCORE == 10.5);
             flag = true;
         }
     }
@@ -367,10 +367,10 @@ DEFINE_TEST(update_element_op){
     tab_row(
             int64_t ID;
             char NAME[10];
-            float SCORE;
+            double SCORE;
             bool PASS;
     );
-    float element = 10.5f;
+    double element = 10.5;
     int res = tab_update_element_op(db,table_index(table), &element, "SCORE", "NAME", COND_EQ, value, DT_CHAR);
     assert(res == TABLE_SUCCESS);
     field_t field;
@@ -378,7 +378,7 @@ DEFINE_TEST(update_element_op){
     bool flag = false;
     tab_for_each_row(table, chunk, chblix, &row, schema){
         if(strcmp(row.NAME, "Nick") == 0){
-            assert(row.SCORE == 10.5f);
+            assert(row.SCORE == 10.5);
             flag = true;
         }
     }
@@ -398,7 +398,7 @@ DEFINE_TEST(delete_op){
     tab_row(
             int64_t ID;
             char NAME[10];
-            float SCORE;
+            double SCORE;
             bool PASS;
     );
     field_t delete_field;

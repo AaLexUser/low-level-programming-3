@@ -1,6 +1,7 @@
 #include "queries_include.h"
 #include "subqueries/subqueries_include.h"
 #include "backend/connection/query_execute/utils/constant_value.h"
+#include "utils/hashtable.h"
 
 void remove_rows(row_likedlist_t *rll) {
     row_node_t *current = rll->head;
@@ -45,7 +46,7 @@ static void process_update(default_query_args_t *args, row_likedlist_t *row_list
 
 
 static int process_nonterminal(db_t *db, schema_t *schema, struct ast *root, struct response *resp,
-                                    row_likedlist_t **filtered_list, row_likedlist_t **second_rll) {
+                                    row_likedlist_t **filtered_list, row_likedlist_t **second_rll, hmap_t* hmap) {
     switch (root->nodetype) {
         case NT_FILTER: {
             *filtered_list = filter_exec(db, root, *filtered_list, schema, resp);
@@ -58,7 +59,7 @@ static int process_nonterminal(db_t *db, schema_t *schema, struct ast *root, str
             break;
         }
         case NT_FOR: {
-            *second_rll = for_stmt_exec(db, root, resp);
+            *second_rll = for_stmt_exec(db, root, resp, hmap);
             if (*second_rll == NULL) {
                 return -1;
             }
@@ -73,7 +74,7 @@ static int process_nonterminal(db_t *db, schema_t *schema, struct ast *root, str
 }
 
 static int process_terminal(db_t *db, schema_t *schema, struct ast *root, struct response *resp,
-                                 row_likedlist_t *filtered_list, row_likedlist_t *second_rll, char* variable) {
+                                 row_likedlist_t *filtered_list, row_likedlist_t *second_rll, char* variable, hmap_t* hmap) {
     switch (root->nodetype) {
         case NT_RETURN: {
             struct return_ast *return_ast_ptr = (struct return_ast *) root;
@@ -119,7 +120,12 @@ static int process_terminal(db_t *db, schema_t *schema, struct ast *root, struct
             char *remove_table = remove_ast_ptr->tabname;
             struct attr_name_ast *attr_name_ast_ptr = (struct attr_name_ast *) remove_ast_ptr->attr;
             char *var = attr_name_ast_ptr->variable;
-            if (strcmp(var, "TEMP") == 0) {
+            row_likedlist_t* rll = ht_get(hmap, var);
+            if(rll == NULL){
+                LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Variable not found %s", var);
+                return -1;
+            }
+            if (strcmp(var, variable) == 0) {
                 remove_rows(filtered_list);
             } else {
                 remove_rows(second_rll);
@@ -156,19 +162,21 @@ int for_exec(default_query_args_t *args) {
         return -1;
     }
     schema_t *schema = sch_load(table->schidx);
+    hmap_t* hmap = ht_init();
     struct list_ast *temp = (struct list_ast *) for_ast_ptr->nonterm_list_head;
     reverseList(&temp);
     row_likedlist_t *filtered_list = tab_table2rll(args->db, table);
     row_likedlist_t *second_rll = NULL;
     while (temp != NULL) {
         struct list_ast *list_ast = (struct list_ast *) temp;
-        if (process_nonterminal(args->db, schema, list_ast->value, args->resp, &filtered_list, &second_rll) == -1) {
+        if (process_nonterminal(args->db, schema, list_ast->value, args->resp, &filtered_list, &second_rll, hmap) == -1) {
             return -1;
         }
         temp = (struct list_ast *) list_ast->next;
     }
     struct ast *terminal = for_ast_ptr->terminal;
-    if (process_terminal(args->db, schema, terminal, args->resp, filtered_list, second_rll, variable) == -1) {
+    ht_put(hmap, for_ast_ptr->var, filtered_list);
+    if (process_terminal(args->db, schema, terminal, args->resp, filtered_list, second_rll, variable, hmap) == -1) {
         return -1;
     }
     if (filtered_list != NULL) row_likedlist_free(filtered_list);

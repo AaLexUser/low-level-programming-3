@@ -390,6 +390,62 @@
   Message: Failed to find table players  
 \end{lstlisting}
 
+\begin{lstlisting}[style=bash]
+  > FOR u IN users RETURN u
+  Message: Selected successfully
+  Table:
+  name            lastname        student         money           score          
+  Alex            Lapin           true            10000           5.000000       
+  Berman          Clock           true            232             3.200000       
+  Cristian        Ronaldo         false           100             4.200000       
+  Dima            Koval           true            2330            2.100000       
+  Egor            Flagman         true            100             1.200000       
+  Fedor           Champion        false           0               5.000000       
+  > FOR u IN users FILTER u.name == "Berman" UPDATE u WITH { score: 5.0 } IN users
+  Message: Updated successfully
+  > FOR u IN users RETURN u
+  Message: Selected successfully
+  Table:
+  name            lastname        student         money           score          
+  Alex            Lapin           true            10000           5.000000       
+  Berman          Clock           true            232             5.000000       
+  Cristian        Ronaldo         false           100             4.200000       
+  Dima            Koval           true            2330            2.100000       
+  Egor            Flagman         true            100             1.200000       
+  Fedor           Champion        false           0               5.000000
+
+  > FOR u IN users RETURN u
+  Message: Selected successfully
+  Table:
+  name            lastname        student         money           score          
+  Alex            Lapin           true            10000           5.000000       
+  Berman          Clock           true            232             5.000000       
+  Cristian        Ronaldo         false           100             4.200000       
+  Dima            Koval           true            2330            2.100000       
+  Egor            Flagman         true            100             1.200000       
+  Fedor           Champion        false           0               5.000000       
+  > FOR u IN users FILTER u.score < 5.0 REMOVE u IN users
+  Message: Removed successfully
+  > FOR u IN users RETURN u
+  Message: Selected successfully
+  Table:
+  name            lastname        student         money           score          
+  Alex            Lapin           true            10000           5.000000       
+  Berman          Clock           true            232             5.000000       
+  Fedor           Champion        false           0               5.000000
+  > FOR u IN users FILTER u.money > 1000 && u.student == true RETURN u
+  Message: Selected successfully
+  Table:
+  name            lastname        student         money           score          
+  Alex            Lapin           true            10000           5.000000
+  > FOR u IN users FILTER u.money > 1000 || u.student == false RETURN u
+  Message: Selected successfully
+  Table:
+  name            lastname        student         money           score          
+  Alex            Lapin           true            10000           5.000000       
+  Fedor           Champion        false           0               5.000000 
+\end{lstlisting}
+
 
 \section{Валидация xml схемы:}
 \subsection{response.xsd}
