@@ -49,7 +49,7 @@ static int process_nonterminal(db_t *db, schema_t *schema, struct ast *root, str
                                     row_likedlist_t **filtered_list, row_likedlist_t **second_rll, hmap_t* hmap) {
     switch (root->nodetype) {
         case NT_FILTER: {
-            *filtered_list = filter_exec(db, root, *filtered_list, schema, resp);
+            *filtered_list = filter_exec(db, root, *filtered_list, schema, resp, *filtered_list);
             if (*filtered_list == NULL) {
                 LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Failed to filter");
                 return -1;
@@ -59,7 +59,7 @@ static int process_nonterminal(db_t *db, schema_t *schema, struct ast *root, str
             break;
         }
         case NT_FOR: {
-            *second_rll = for_stmt_exec(db, root, resp, hmap);
+            *second_rll = for_stmt_exec(db, root, resp, hmap, *filtered_list);
             if (*second_rll == NULL) {
                 return -1;
             }
@@ -101,12 +101,11 @@ static int process_terminal(db_t *db, schema_t *schema, struct ast *root, struct
                 }
                 case NT_MERGE: {
                     if (filtered_list->schema != NULL && second_rll->schema != NULL) {
-                        row_likedlist_t* join_list = rll_join(db, filtered_list, second_rll);
-                        table_t *join_table = tab_rll2table(db, join_list, "TEMP");
+                        row_likedlist_t* join_list = second_rll;
+                        table_t *join_table = tab_rll2table(db, second_rll, "TEMP");
                         tab_print(db, join_table, join_list->schema);
                         set_response(resp, 0, "Selected successfully");
                         resp->table = join_table;
-                        row_likedlist_free(join_list);
                         break;
                     }
                     LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Failed to join");

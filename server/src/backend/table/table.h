@@ -90,6 +90,13 @@ row_likedlist_t *rll_filter(db_t *db,
 row_likedlist_t* rll_join(db_t *db,
                           row_likedlist_t *left,
                           row_likedlist_t *right);
+row_likedlist_t *rll_filter_var(db_t *db,
+                                row_likedlist_t *right_list,
+                                field_t *right_field,
+                                condition_t condition,
+                                row_likedlist_t *left_list,
+                                field_t *left_field,
+                                datatype_t type);
 
 row_likedlist_t *rll_join_or(row_likedlist_t *left,
                              row_likedlist_t *right);

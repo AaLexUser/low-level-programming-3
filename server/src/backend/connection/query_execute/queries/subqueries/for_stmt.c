@@ -1,7 +1,7 @@
 #include "subqueries_include.h"
 #include "utils/hashtable.h"
 
-row_likedlist_t *for_stmt_exec(db_t *db, struct ast *root, struct response *resp, hmap_t* hmap) {
+row_likedlist_t *for_stmt_exec(db_t *db, struct ast *root, struct response *resp, hmap_t* hmap, row_likedlist_t* list_1) {
     struct for_ast *for_ast_ptr = (struct for_ast *) root;
     int64_t tabix = mtab_find_table_by_name(db->meta_table_idx, for_ast_ptr->tabname);
     if (tabix == TABLE_FAIL) {
@@ -22,7 +22,7 @@ row_likedlist_t *for_stmt_exec(db_t *db, struct ast *root, struct response *resp
         struct list_ast *list_ast = (struct list_ast *) temp;
         switch (list_ast->value->nodetype) {
             case NT_FILTER: {
-                filtered_list = filter_exec(db, list_ast->value, filtered_list, schema, resp);
+                filtered_list = filter_exec(db, list_ast->value, filtered_list, schema, resp, list_1);
                 if (filtered_list == NULL) {
                     LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Failed to filter");
                     return NULL;

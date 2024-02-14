@@ -8,9 +8,7 @@ FOR u IN users FILTER u.name == "Berman" RETURN u
 CREATE users WITH { name: string, lastname: string, student: bool, money: int, score: float}
 CREATE group WITH { group_id: int, name: string }
 
-CREATE players WITH { username: string, player: bool, cash: int, score: float}
-
-FOR v1 in people FILTER "hi" IN v1.name FOR v2 in students FOR v3 in students FOR v4 in students RETURN MERGE(v1,v2)
+CREATE players WITH { username: string, player: bool, cash: int, score: float, group_id: int}
 
 INSERT { name: "Alex", lastname: "Lapin", student: true, money: 100, score: 5.0 } INTO users
 
@@ -39,13 +37,89 @@ INSERT { name: "Dima", lastname: "Koval", student: true, money: 2330, score: 2.1
 INSERT { name: "Egor", lastname: "Flagman", student: true, money: 100, score: 1.2 } INTO users
 INSERT { name: "Fedor", lastname: "Champion", student: false, money: 0, score: 5.0 } INTO users
 
+INSERT { username: "Alex", player: false, cash: 10000, score: 5.0, group_id: 1 } INTO players
+INSERT { username: "Berman", player: true, cash: 232, score: 3.2, group_id: 2 } INTO players
+INSERT { username: "Cristian", player: false, cash: 100, score: 4.2, group_id: 3} INTO players
+INSERT { username: "Dima", player: true, cash: 2330, score: 2.1, group_id: 4 } INTO players
+INSERT { username: "Egor", player: true, cash: 100, score: 1.2, group_id: 1 } INTO players
+INSERT { username: "Fedor", player: false, cash: 0, score: 5.0, group_id: 3 } INTO players
+
+
+
+CREATE TABLE users (
+    name varchar(255),
+    lastname varchar(255),
+    student bool,
+    money int,
+    score float
+)
+
+CREATE TABLE groupp (
+    group_id int,
+    name varchar(255)
+)
+
+CREATE TABLE players (
+    username varchar(255),
+    player bool,
+    cash int,
+    score float,
+    group_id int
+)
+
+INSERT INTO users VALUES ('Alex', 'Lapin', true, 100, 5.0);
+INSERT INTO users VALUES ('Berman', 'Clock', true, 232, 3.2);
+INSERT INTO users VALUES ('Cristian', 'Ronaldo', false, 100, 4.2);
+INSERT INTO users VALUES ('Dima', 'Koval', true, 2330, 2.1);
+INSERT INTO users VALUES ('Egor', 'Flagman', true, 100, 1.2);
+INSERT INTO users VALUES ('Fedor', 'Champion', false, 0, 5.0);
+
+INSERT INTO groupp VALUES (1, 'P33102');
+INSERT INTO groupp VALUES (2, 'M33103');
+INSERT INTO groupp VALUES (3, 'G33104');
+INSERT INTO groupp VALUES (4, 'Z33105');
+INSERT INTO groupp VALUES (5, 'K33106');
+
+INSERT INTO players VALUES ('Alex', false, 10000, 5.0, 1);
+INSERT INTO players VALUES ('Berman', true, 232, 3.2, 1);
+INSERT INTO players VALUES ('Cristian', false, 100, 4.2, 2);
+INSERT INTO players VALUES ('Dima', true, 2330, 2.1, 2);
+INSERT INTO players VALUES ('Egor', true, 100, 1.2, 3);
+INSERT INTO players VALUES ('Fedor', false, 0, 5.0, 3);
+
+SELECT * FROM users as u
+JOIN players as p ON u.name = p.username
+WHERE u.student = true 
+AND u.money > 100
+AND p.player = true
+
+SELECT * FROM users as u
+FULL OUTER JOIN groupp as g ON u.name = g.name
+WHERE u.student = true
+
+SELECT * FROM players as p
+LEFT JOIN groupp as g ON p.group_id = g.group_id
+WHERE p.player = true
+
+SELECT * FROM players as p
+LEFT JOIN groupp as g ON p.group_id = g.group_id
+WHERE p.player = true
+AND p.cash > 100
+
+FOR p IN players FILTER p.player == true && p.cash > 100 FOR g IN group FILTER g.group_id == p.group_id RETURN MERGE(p,g)
+
+
+FOR u IN users FILTER u.money == 100 FOR g IN group RETURN MERGE(u,g)
+
 FOR u IN users FILTER u.money > 100 FOR g IN group RETURN MERGE(u,g)
 FOR u IN users FILTER u.money == 100 FOR g IN group RETURN MERGE(u,g)
 FOR u IN users FILTER u.money == 100 FOR g IN group RETURN g
 
 FOR u IN users FILTER u.money == 100 FOR g IN group FILTER g.group_id == 3 RETURN MERGE(u,g)
+FOR u IN users FILTER u.student == true && u.money > 100 FOR p IN players FILTER p.player == true RETURN MERGE(u,p)
 FOR g IN group FILTER g.group_id == 3 RETURN g
 
 DROP players
 
 FOR u IN users FILTER u.name == "Alex" UPDATE u WITH { score: 5 } IN users
+FOR p IN players FOR g IN group FILTER g.group_id == p.group_id RETURN MERGE(p,g)

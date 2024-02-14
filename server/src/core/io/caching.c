@@ -704,7 +704,7 @@ int ch_delete_page(caching_t* ch, int64_t page_index){
         return CH_FAIL;
     }
     ch->flags[page_index] = 3; // Mark page as deleted
-    printf("Deleted page %ld\n", page_index);
+//    printf("Deleted page %ld\n", page_index);
     fflush(stdout);
     if(page_index == ch_max_page_index(ch)){
         ch_delete_last_page(ch);

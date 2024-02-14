@@ -1,25 +1,9 @@
-FOR u IN users RETURN u
-
-CREATE users WITH { name: string, lastname: string, student: bool, money: int, score: float}
-
-FOR v1 in people
-  FILTER "hi" IN v1.name
-  FOR v2 in students
-   FOR v3 in students
-    FOR v4 in students
-      RETURN MERGE(v1,v2)
-
-INSERT { name: "Alex", lastname: "Lapin", student: true, money: 100, score: 5.0 } INTO users
-
-FOR u IN users
-  FILTER u.score < 2
-  REMOVE u IN users
-
-FOR u IN users FILTER u.score < 2 AND u.name == "Alex" UPDATE u WITH { score: 5 } IN users
-
-FOR u IN users
-  FILTER u.score > 4 || u.name == "Alex"
- FOR s IN students
-  FILTER u.name == s.name && "Alex" IN u.name
-  RETURN MERGE(u,s)
-
+CREATE categories WITH { category_id: int, category_name: string, description: string, picture: string}
+CREATE customer_demographics WITH { customer_type_id: int, customer_desc: string}
+CREATE customers WITH { customer_id: int, company_name: string, contact_name: string, contact_title: string, address: string, city: string, region: string, postal_code: string, country: string, phone: string, fax: string}
+CREATE customer_customer_demo WITH {customer_id: int, customer_type_id: int } 
+CREATE employees WITH { employee_id: int, last_name: string, first_name: string, title: string, title_of_courtesy: string, birth_date: string, hire_date: string, address: string, city: string, region: string, postal_code: string, country: string, home_phone: string, extension: string, photo: string, notes: string, reports_to: int, photo_path: string}
+CREATE suppliers WITH { shipper_id: int, company_name: string, contact_name: string, contact_title: string, address: string, city: string, region: string, postal_code: string, country: string, phone: string, fax: string}
+CREATE products WITH {product_id: int, product_name: string, supplier_id: int, category_id: int, quantity_per_unit: string, unit_price: float, units_in_stock: int, units_on_order: int, reorder_level: int, discontinued: int}
+CREATE region_id WITH { region_id: int, region_description: string}
+CREATE shippers WITH {}
