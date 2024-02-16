@@ -11,7 +11,7 @@ typedef enum ntype {
     NT_FOR, NT_RETURN, NT_FILTER, NT_INSERT,
     NT_UPDATE, NT_REMOVE, NT_CREATE, NT_DROP,
     NT_PAIR, NT_FILTER_CONDITION, NT_FILTER_EXPR,
-    NT_ATTR_NAME, NT_LIST, NT_CREATE_PAIR, NT_MERGE,
+    NT_ATTR_NAME, NT_LIST, NT_CREATE_PAIR, NT_MERGE, NT_MERGE_PROJECTIONS,
 
     /* variable types */
     NT_INTEGER, NT_FLOAT, NT_STRING, NT_BOOLEAN,
@@ -115,6 +115,11 @@ struct merge_ast {
     char* var2;
 };
 
+struct merge_projections_ast {
+    ntype_t nodetype;
+    struct ast* list;
+};
+
 struct pair_ast {
     ntype_t nodetype;
     char* key;
@@ -211,6 +216,9 @@ newreturn(struct ast* value);
 
 struct ast*
 newmerge(char* var1, char* var2);
+
+struct ast*
+newmerge_projections(struct ast* list);
 
 struct ast*
 newinsert(char* tabname, struct ast* list);

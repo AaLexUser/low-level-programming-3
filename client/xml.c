@@ -106,6 +106,14 @@ void add_node(xmlNodePtr parent, struct ast *node)
         xmlNewProp(xmlNode, BAD_CAST "var2", BAD_CAST buffer);
         break;
     }
+    case NT_MERGE_PROJECTIONS:
+    {
+        struct merge_projections_ast *merge_projections_ast = (struct merge_projections_ast *)node;
+        xmlNode = xmlNewChild(parent, NULL, BAD_CAST "merge_projections", NULL);
+        xmlNodePtr list = xmlNewChild(xmlNode, NULL, BAD_CAST "list", NULL);
+        add_node(list, merge_projections_ast->list);
+        break;
+    }
     case NT_ATTR_NAME:
     {
         struct attr_name_ast *attr_name_ast = (struct attr_name_ast *)node;

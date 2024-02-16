@@ -1,8 +1,10 @@
 #include "ast.h"
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdarg.h>
+#include <string.h>
+#include <math.h>
 
 
 struct ast*
@@ -191,6 +193,20 @@ newmerge(char* var1, char* var2)
     mergeast->var1 = var1;
     mergeast->var2 = var2;
     return (struct ast*)mergeast;
+}
+
+/*---------------------------merge projections ast -----------------------------*/
+struct ast*
+newmerge_projections(struct ast* list)
+{
+    struct merge_projections_ast* merge_projections = malloc(sizeof(struct merge_projections_ast));
+    if (!merge_projections) {
+        fprintf(stderr, "out of space");
+        return NULL;
+    }
+    merge_projections->nodetype = NT_MERGE_PROJECTIONS;
+    merge_projections->list = list;
+    return (struct ast*)merge_projections;
 }
 
 
@@ -413,6 +429,13 @@ void print_ast(FILE* stream, struct ast* ast, int level)
             print_node(stream, level, "}\n");
             break;
         }
+        case NT_MERGE_PROJECTIONS: {
+            struct merge_projections_ast* merge_projectionsast = (struct merge_projections_ast*)ast;
+            print_node(stream, level, "merge_projections: {\n");
+            print_ast(stream, merge_projectionsast->list, level+1);
+            print_node(stream, level, "}\n");
+            break;
+        }
         case NT_ATTR_NAME: {
             struct attr_name_ast* attrnameast = (struct attr_name_ast*)ast;
             print_node(stream, level, "attr_name: {\n");
@@ -563,6 +586,12 @@ void free_ast(struct ast* ast){
             free(mergeast);
             break;
         }
+        case NT_MERGE_PROJECTIONS: {
+            struct merge_projections_ast* merge_projectionsast = (struct merge_projections_ast*)ast;
+            free_ast(merge_projectionsast->list);
+            free(merge_projectionsast);
+            break;
+        }
         case NT_ATTR_NAME: {
             struct attr_name_ast* attrnameast = (struct attr_name_ast*)ast;
             free(attrnameast->variable);
@@ -629,3 +658,4 @@ void free_ast(struct ast* ast){
     }
 
 }
+

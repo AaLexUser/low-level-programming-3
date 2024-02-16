@@ -79,11 +79,26 @@
         </xs:complexType>
     </xs:element>
 
+    <xs:complexType name="mergeList">
+            <xs:sequence>
+                <xs:element ref="attr_name" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+    </xs:complexType>
+
+    <xs:element name="merge_projections">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="list" type="mergeList" minOccurs="0" />
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
     <xs:element name="return">
         <xs:complexType>
             <xs:choice>
                 <xs:element ref="attr_name"/>
                 <xs:element ref="merge"/>
+                <xs:element ref="merge_projections"/>
             </xs:choice>
         </xs:complexType>
     </xs:element>

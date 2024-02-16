@@ -90,6 +90,8 @@ row_likedlist_t *rll_filter(db_t *db,
 row_likedlist_t* rll_join(db_t *db,
                           row_likedlist_t *left,
                           row_likedlist_t *right);
+row_likedlist_t *
+rll_projection(db_t *db, row_likedlist_t *list, field_t *fields, int64_t num_of_fields, const char *name);
 row_likedlist_t *rll_filter_var(db_t *db,
                                 row_likedlist_t *right_list,
                                 field_t *right_field,

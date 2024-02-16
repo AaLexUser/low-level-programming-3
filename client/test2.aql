@@ -80,12 +80,12 @@ INSERT INTO groupp VALUES (3, 'G33104');
 INSERT INTO groupp VALUES (4, 'Z33105');
 INSERT INTO groupp VALUES (5, 'K33106');
 
-INSERT INTO players VALUES ('Alex', false, 10000, 5.0, 1);
-INSERT INTO players VALUES ('Berman', true, 232, 3.2, 1);
-INSERT INTO players VALUES ('Cristian', false, 100, 4.2, 2);
-INSERT INTO players VALUES ('Dima', true, 2330, 2.1, 2);
-INSERT INTO players VALUES ('Egor', true, 100, 1.2, 3);
-INSERT INTO players VALUES ('Fedor', false, 0, 5.0, 3);
+insert { username: "Alex", player: false, cash: 10000, score: 5.0, group_id: 1 } into players
+insert { username: "Berman", player: true, cash: 232, score: 3.2, group_id: 1 } into players
+insert { username: "Cristian", player: false, cash: 100, score: 4.2, group_id: 2 } into players
+insert { username: "Dima", player: true, cash: 2330, score: 2.1, group_id: 2 } into players
+insert { username: "Egor", player: true, cash: 100, score: 1.2, group_id: 3 } into players
+insert { username: "Fedor", player: false, cash: 0, score: 5.0, group_id: 3 } into players
 
 SELECT * FROM users as u
 JOIN players as p ON u.name = p.username
@@ -123,3 +123,20 @@ DROP players
 
 FOR u IN users FILTER u.name == "Alex" UPDATE u WITH { score: 5 } IN users
 FOR p IN players FOR g IN group FILTER g.group_id == p.group_id RETURN MERGE(p,g)
+
+FOR o IN orders FILTER o.customer_id == "RICSU" AND o.freight > 100.0 FOR e IN employees FILTER e.employee_id == o.employee_id RETURN MERGE(e,o)
+
+FOR o IN orders FILTER o.customer_id == "RICSU" AND o.freight > 100.0 FOR e IN employees FILTER e.employee_id == o.employee_id RETURN MERGE{e.first_name, e.last_name, o.customer_id, o.freight}
+
+SELECT e.first_name, e.last_name, o.freight FROM orders AS o
+JOIN employees AS e ON o.employee_id = e.employee_id
+WHERE o.customer_id = 'RICSU' AND o.freight > 100.0
+
+FOR o IN orders FILTER o.customer_id == "RICSU" RETURN o
+
+
+FOR o IN orders FILTER (o.customer_id == "HUNGO" OR o.customer_id == "SAVEA") AND o.freight > 100.0 FOR e IN employees FILTER e.employee_id == o.employee_id RETURN MERGE{e.first_name, e.last_name, o.customer_id, o.freight}
+
+SELECT e.first_name, e.last_name, o.customer_id, o.freight FROM orders AS o
+  JOIN employees AS e ON o.employee_id = e.employee_id
+  WHERE (o.customer_id = 'HUNGO' OR o.customer_id = 'SAVEA') AND o.freight > 100.0;

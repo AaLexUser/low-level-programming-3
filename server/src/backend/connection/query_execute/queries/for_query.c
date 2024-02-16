@@ -111,6 +111,37 @@ static int process_terminal(db_t *db, schema_t *schema, struct ast *root, struct
                     LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Failed to join");
                     break;
                 }
+                case NT_MERGE_PROJECTIONS:{
+                    if (filtered_list->schema != NULL && second_rll->schema != NULL) {
+                        struct merge_projections_ast *merge_projections_ast_ptr = (struct merge_projections_ast *) return_value;
+                        struct list_ast *list_head = (struct list_ast *) merge_projections_ast_ptr->list;
+                        reverseList(&list_head);
+                        int64_t num_of_fields = 0;
+                        field_t fields[100];
+                        while (list_head != NULL) {
+                            struct attr_name_ast *attr_name_ast_ptr = (struct attr_name_ast *) list_head->value;
+                            char *var = attr_name_ast_ptr->variable;
+                            char *field_name = attr_name_ast_ptr->attr_name;
+                            field_t field;
+                            if (sch_get_field(second_rll->schema, field_name, &field) == SCHEMA_NOT_FOUND) {
+                                LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Field not found %s", field_name);
+                                return -1;
+                            }
+                            fields[num_of_fields] = field;
+                            num_of_fields++;
+                            list_head = (struct list_ast *) list_head->next;
+                        }
+                        row_likedlist_t *projected_rll = rll_projection(db, second_rll, fields, num_of_fields, "TEMP");
+                        table_t *projected_table = tab_rll2table(db, projected_rll, "TEMP");
+                        tab_print(db, projected_table, projected_rll->schema);
+                        set_response(resp, 0, "Selected successfully");
+                        resp->table = projected_table;
+                        row_likedlist_free(projected_rll);
+                        break;
+                    }
+                    LOG_ERROR_AND_UPDATE_RESPONSE(resp, "Failed to join");
+                    break;
+                }
             }
             break;
         }

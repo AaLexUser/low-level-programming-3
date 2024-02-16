@@ -456,7 +456,7 @@ row_likedlist_t *rll_filter_var(db_t *db,
     }
 
     row_likedlist_t *list = row_likedlist_init(new_schema);
-    if(list == NULL){
+    if (list == NULL) {
         logger(LL_ERROR, __func__, "Failed to create new row_likedlist");
         return NULL;
     }
@@ -465,23 +465,26 @@ row_likedlist_t *rll_filter_var(db_t *db,
     void *el2 = malloc(left_field->size);
     void *row = malloc(new_schema->slot_size);
 
-    for(row_node_t *current_left = left_list->head; current_left!= NULL; current_left = current_left->next){
+    for (row_node_t *current_left = left_list->head; current_left != NULL; current_left = current_left->next) {
         memcpy(el1, (char *) current_left->row + left_field->offset, left_field->size);
-        for(row_node_t* current_right = right_list->head; current_right != NULL; current_right = current_right->next){
+        for (row_node_t *current_right = right_list->head; current_right != NULL; current_right = current_right->next) {
             memcpy(el2, (char *) current_right->row + right_field->offset, right_field->size);
-            if(comp_compare(db, type, el1, el2, condition)){
+            if (comp_compare(db, type, el1, el2, condition)) {
                 memcpy(row, current_left->row, left_list->schema->slot_size);
                 memcpy((char *) row + left_list->schema->slot_size, current_right->row, right_list->schema->slot_size);
-                row_likedlist_add(list, &current_left->rst_head->rowix, row, current_left->rst_head->schema, current_left->rst_head->table);
+                row_likedlist_add(list, &current_left->rst_head->rowix, row, current_left->rst_head->schema,
+                                  current_left->rst_head->table);
                 row_node_t *current_row = list->tail;
                 rst_node_t *current_rst_left = current_left->rst_head->next;
-                while(current_rst_left != NULL){
-                    row_likedlist_add_rst(&current_rst_left->rowix, current_row, current_rst_left->schema, current_rst_left->table);
+                while (current_rst_left != NULL) {
+                    row_likedlist_add_rst(&current_rst_left->rowix, current_row, current_rst_left->schema,
+                                          current_rst_left->table);
                     current_rst_left = current_rst_left->next;
                 }
                 rst_node_t *current_rst_right = current_right->rst_head;
-                while(current_rst_right != NULL){
-                    row_likedlist_add_rst(&current_rst_right->rowix, current_row, current_rst_right->schema, current_rst_right->table);
+                while (current_rst_right != NULL) {
+                    row_likedlist_add_rst(&current_rst_right->rowix, current_row, current_rst_right->schema,
+                                          current_rst_right->table);
                     current_rst_right = current_rst_right->next;
                 }
             }
@@ -557,6 +560,70 @@ static int rrl_validate_join_context(row_likedlist_t *left, row_likedlist_t *rig
         return -1;
     }
     return 0;
+}
+
+row_likedlist_t *
+rll_projection(db_t *db, row_likedlist_t *list, field_t *fields, int64_t num_of_fields, const char *name) {
+    if (list == NULL) {
+        logger(LL_ERROR, __func__, "Invalid argument, list is NULL");
+        return NULL;
+    }
+
+    if (list->schema == NULL) {
+        logger(LL_ERROR, __func__, "Invalid argument, schema is NULL");
+        return NULL;
+    }
+
+    /* Create new schema */
+    schema_t *new_schema = sch_init();
+    if (new_schema == NULL) {
+        logger(LL_ERROR, __func__, "Failed to create new schema");
+        return NULL;
+    }
+
+    for (int64_t i = 0; i < num_of_fields; i++) {
+        field_t *field = &fields[i];
+        if (sch_add_field(new_schema, field->name, field->type, (int64_t) field->size) == SCHEMA_FAIL) {
+            logger(LL_ERROR, __func__, "Failed to add field %s", field->name);
+            return NULL;
+        }
+    }
+
+    /* Create new table */
+    row_likedlist_t *new_list = row_likedlist_init(new_schema);
+    if (new_list == NULL) {
+        logger(LL_ERROR, __func__, "Failed to create new row_likedlist");
+        return NULL;
+    }
+
+    /* Create new row */
+    void *row = malloc(new_schema->slot_size);
+
+
+    /* Select */
+    row_node_t *current = list->head;
+    while (current != NULL) {
+        sch_for_each(new_schema, chunk, field, chblix, schema_index(new_schema)) {
+            for (int64_t i = 0; i < num_of_fields; i++) {
+                if (strcmp(field.name, fields[i].name) == 0) {
+                    memcpy((char *) row + field.offset, (char *) current->row + fields[i].offset, fields[i].size);
+                    break;
+                }
+            }
+        }
+
+        row_likedlist_add(new_list, &current->rst_head->rowix, row, current->rst_head->schema,
+                          current->rst_head->table);
+        row_node_t *current_row = new_list->tail;
+        rst_node_t *current_rst = current->rst_head->next;
+        while (current_rst != NULL) {
+            row_likedlist_add_rst(&current_rst->rowix, current_row, current_rst->schema, current_rst->table);
+            current_rst = current_rst->next;
+        }
+        current = current->next;
+    }
+    free(row);
+    return new_list;
 }
 
 row_likedlist_t *rll_join(db_t *db,

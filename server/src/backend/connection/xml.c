@@ -105,6 +105,9 @@ struct ast *xml2ast(xmlNode *node) {
         char *var1 = (char *) xmlGetProp(node, BAD_CAST "var1");
         char *var2 = (char *) xmlGetProp(node, BAD_CAST "var2");
         ast_node = newmerge(var1, var2);
+    } else if (!xmlStrcmp(node->name, BAD_CAST "merge_projections")) {
+        struct ast *ast_list = xml2ast(get_child(node));
+        ast_node = newmerge_projections(ast_list);
     } else if (!xmlStrcmp(node->name, BAD_CAST "attr_name")) {
         char *variable = (char *) xmlGetProp(node, BAD_CAST "variable");
         char *attribute = (char *) xmlGetProp(node, BAD_CAST "attribute");
@@ -222,7 +225,7 @@ char *response2xml(db_t *db, struct response *resp) {
                     case DT_FLOAT: {
                         double val = *(double *) ((char *) row + field.offset);
                         char *value_str = malloc(21);
-                        sprintf(value_str, "%f", val);
+                        sprintf(value_str, "%0.2f", val);
                         xmlNodePtr element_node = xmlNewChild(row_node, NULL, BAD_CAST "element", BAD_CAST value_str);
                         xmlNewProp(element_node, BAD_CAST "name", BAD_CAST field.name);
                         free(value_str);

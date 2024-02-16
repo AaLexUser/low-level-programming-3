@@ -454,6 +454,92 @@
 \subsection{request.xsd}
 \lstinputlisting[style=bash, language=XML]{../server/src/request.xsd}
 
+\section{Сравнение с postgresql используя базу данных Northwind}
+\subsection{Запрос к моей бд:}
+\begin{lstlisting}[style=bash]
+  > FOR o IN orders FILTER (o.customer_id == "HUNGO" OR o.customer_id == "SAVEA") AND o.freight > 100.0 FOR e IN employees FILTER e.employee_id == o.employee_id RETURN MERGE{e.first_name, e.last_name, o.customer_id, o.freight}
+  Message: Selected successfully
+  Table:
+  first_name      last_name       customer_id     freight        
+  Michael         Suyama          HUNGO           168.22         
+  Anne            Dodsworth       SAVEA           214.27         
+  Margaret        Peacock         HUNGO           124.12         
+  Nancy           Davolio         SAVEA           126.56         
+  Laura           Callahan        SAVEA           140.26         
+  Michael         Suyama          SAVEA           367.63         
+  Steven          Buchanan        SAVEA           200.24         
+  Nancy           Davolio         SAVEA           544.08         
+  Laura           Callahan        SAVEA           107.46         
+  Anne            Dodsworth       HUNGO           142.33         
+  Andrew          Fuller          SAVEA           352.69         
+  Robert          King            SAVEA           388.98         
+  Anne            Dodsworth       HUNGO           296.43         
+  Michael         Suyama          HUNGO           220.31         
+  Nancy           Davolio         SAVEA           167.05         
+  Janet           Leverling       SAVEA           232.55         
+  Nancy           Davolio         SAVEA           116.13         
+  Andrew          Fuller          HUNGO           580.91         
+  Andrew          Fuller          SAVEA           657.54         
+  Nancy           Davolio         SAVEA           211.22         
+  Margaret        Peacock         SAVEA           141.16         
+  Robert          King            SAVEA           830.75         
+  Michael         Suyama          SAVEA           227.22         
+  Robert          King            SAVEA           400.81         
+  Janet           Leverling       HUNGO           603.54         
+  Margaret        Peacock         SAVEA           487.57         
+  Michael         Suyama          SAVEA           252.49        
+\end{lstlisting}
+\subsection{Запрос к postgresql:}
+\begin{lstlisting}[style=bash]
+  SELECT e.first_name, e.last_name, o.customer_id, o.freight FROM orders AS o
+  JOIN employees AS e ON o.employee_id = e.employee_id
+  WHERE (o.customer_id = 'HUNGO' OR o.customer_id = 'SAVEA') AND o.freight > 100.0;
+  "first_name"	"last_name"	"customer_id"	"freight"
+  "Michael"	"Suyama"	"HUNGO"	168.22
+  "Anne"	"Dodsworth"	"SAVEA"	214.27
+  "Margaret"	"Peacock"	"HUNGO"	124.12
+  "Nancy"	"Davolio"	"SAVEA"	126.56
+  "Laura"	"Callahan"	"SAVEA"	140.26
+  "Michael"	"Suyama"	"SAVEA"	367.63
+  "Michael"	"Suyama"	"SAVEA"	252.49
+  "Steven"	"Buchanan"	"SAVEA"	200.24
+  "Nancy"	"Davolio"	"SAVEA"	544.08
+  "Laura"	"Callahan"	"SAVEA"	107.46
+  "Anne"	"Dodsworth"	"HUNGO"	142.33
+  "Andrew"	"Fuller"	"SAVEA"	352.69
+  "Robert"	"King"	"SAVEA"	388.98
+  "Anne"	"Dodsworth"	"HUNGO"	296.43
+  "Michael"	"Suyama"	"HUNGO"	220.31
+  "Nancy"	"Davolio"	"SAVEA"	167.05
+  "Janet"	"Leverling"	"SAVEA"	232.55
+  "Margaret"	"Peacock"	"SAVEA"	487.57
+  "Nancy"	"Davolio"	"SAVEA"	116.13
+  "Janet"	"Leverling"	"HUNGO"	603.54
+  "Andrew"	"Fuller"	"HUNGO"	580.91
+  "Robert"	"King"	"SAVEA"	400.81
+  "Andrew"	"Fuller"	"SAVEA"	657.54
+  "Nancy"	"Davolio"	"SAVEA"	211.22
+  "Margaret"	"Peacock"	"SAVEA"	141.16
+  "Robert"	"King"	"SAVEA"	830.75
+  "Michael"	"Suyama"	"SAVEA"	227.22
+\end{lstlisting}
+
+Видно, что результаты запросов совпадают.
+
+\subsection{Запрос к моей бд:}
+\begin{lstlisting}[style=bash]
+  FOR o IN orders FILTER o.customer_id == "RICSU" AND o.freight > 100.0 FOR e IN employees FILTER e.employee_id == o.employee_id RETURN MERGE{e.first_name, e.last_name, o.freight}
+\end{lstlisting}
+\includegraphics{image/mydb1.png}
+\subsection{Запрос к postgresql:}
+\begin{lstlisting}[style=bash]
+  SELECT e.first_name, e.last_name, o.freight FROM orders AS o
+  JOIN employees AS e ON o.employee_id = e.employee_id
+  WHERE o.customer_id = 'RICSU' AND o.freight > 100.0;
+\end{lstlisting}
+\includegraphics{image/pg1.png}\\
+Видно, что результаты запросов совпадают.
+
 \section{Выводы:}
 
 \textbf{Что я узнал, чему научился:}

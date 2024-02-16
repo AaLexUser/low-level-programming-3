@@ -45,7 +45,7 @@ extern int yyerror(struct ast** ast, const char *s, ...);
 %type <ast> for_stmt for_first_stmt filter_list
 %type <ast> constant 
 %type <ast> filter_stmt conditions filter_expr filter_attr_name
-%type <ast> return_stmt attr_name merge
+%type <ast> return_stmt attr_name merge merge_list merge_proj
 %type <ast> query terminal non_terminal_list 
 %type <ast> insert_stmt document pairs pair
 %type <ast> update_stmt remove_stmt drop_stmt
@@ -91,7 +91,8 @@ filter_list: filter_stmt                                     { $$ = newlist($1, 
 /*---------------filter-----------------*/
 filter_stmt: FILTER conditions              { $$ = newfilter($2); *root= $$;}
     ;
-conditions: '(' filter_expr ')'             { $$ = newfilter_condition($2, NULL, -1); *root= $$;}
+conditions: '(' conditions ')' AND filter_expr      { $$ = newfilter_condition($5, $2, NT_AND); *root= $$;}
+    | '(' conditions ')' OR filter_expr       { $$ = newfilter_condition($5, $2, NT_OR); *root= $$;}
     | filter_expr                           { $$ = newfilter_condition($1, NULL, -1); *root= $$;}
     | filter_expr AND conditions            { $$ = newfilter_condition($1, $3, NT_AND); *root= $$;}
     | filter_expr OR conditions             { $$ = newfilter_condition($1, $3, NT_OR); *root= $$;}
@@ -106,8 +107,15 @@ filter_attr_name: VARNAME '.' VARNAME         { $$ = newattr_name($1, $3); *root
 /*---------------return-----------------*/
 return_stmt: RETURN attr_name               { $$ = newreturn($2); *root= $$;}
     |    RETURN MERGE '(' merge ')'         { $$ = newreturn($4); *root= $$;}
+    |    RETURN MERGE '{' merge_proj '}'    { $$ = newreturn($4); *root= $$;}
+    ;
 
 merge: VARNAME ',' VARNAME                { $$ = newmerge($1, $3); *root= $$;}
+    ;
+merge_proj: merge_list                    { $$ = newmerge_projections($1); *root= $$;}
+    ;
+merge_list: attr_name                     { $$ = newlist($1, NULL); *root= $$;}
+    | merge_list ',' attr_name            { $$ = newlist($3, $1); *root= $$;}
     ;
 attr_name: VARNAME '.' VARNAME         { $$ = newattr_name($1, $3);*root= $$;}
     | VARNAME                          { $$ = newattr_name($1, NULL); *root= $$;}

@@ -52,8 +52,25 @@ int main(int argc, char **argv)
             sending_queries = false;
             continue;
         }
+        if(strcmp(buffer, "help") == 0){
+            printf("Commands:\n");
+            printf("exit: close the connection and exit the program\n");
+            printf("help: show this help message\n");
+            continue;
+        }
+        if(strcmp(buffer, "") == 0){
+            continue;
+        }
+        if(strcmp(buffer, "\n") == 0){
+            continue;
+        }
 
         struct ast *ast = parse_query(buffer);
+        if (ast == NULL)
+        {
+            printf("Invalid query\n");
+            continue;
+        }
 
         char *xml = ast2xml(ast);
 
